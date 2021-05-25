@@ -47,9 +47,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            app:layout_constraintEnd_toStartOf="parent"
             app:layout_constraintGuide_end="0dp"
-            app:layout_constraintStart_toEndOf="parent"
 
             app:reactiveGuide_animateChange="true"
             app:reactiveGuide_applyToAllConstraintSets="true"
@@ -74,9 +72,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintGuide_end="0dp"
-        app:layout_constraintTop_toTopOf="parent"
         app:reactiveGuide_animateChange="true"
         app:reactiveGuide_applyToAllConstraintSets="true"
         app:reactiveGuide_valueId="@id/fold"
@@ -90,6 +86,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/fold"
-        app:layout_constraintTop_toBottomOf="parent" />
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.motion.widget.MotionLayout>
