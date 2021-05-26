@@ -8,6 +8,7 @@ import android.view.View
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.util.Consumer
+import androidx.window.DisplayFeature
 import androidx.window.FoldingFeature
 import androidx.window.WindowLayoutInfo
 import androidx.window.WindowManager
@@ -30,14 +31,17 @@ class MainActivity : AppCompatActivity() {
     private lateinit var chatEnableButton: FloatingActionButton
 
     private var chatToggle: Boolean = true
+    private var spanToggle: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        chatToggle = true
+        spanToggle = false
+
         windowManager = WindowManager(this)
 
         setContentView(R.layout.activity_main)
-
 
         rootMotionLayout = findViewById<MotionLayout>(R.id.root)
         leafMotionLayout = findViewById<MotionLayout>(R.id.leaf)
@@ -46,6 +50,7 @@ class MainActivity : AppCompatActivity() {
         playerView = findViewById(R.id.player_view);
         player = SimpleExoPlayer.Builder(this).build()
         playerView.player = player
+
     }
 
     override fun onStart() {
@@ -59,18 +64,18 @@ class MainActivity : AppCompatActivity() {
 
         chatEnableButton.setOnClickListener { view ->
             chatToggle = !chatToggle
-            if (chatToggle) {
-                leafMotionLayout.transitionToState(R.id.leafChat)
-//                ConstraintLayout.getSharedValues().fireNewValue(R.id.fold, 500)
-//                ConstraintLayout.getSharedValues().fireNewValue(R.id.split, 500)
-            }
-            else {
-                leafMotionLayout.transitionToState(R.id.leafFull)
-//                ConstraintLayout.getSharedValues().fireNewValue(R.id.fold, 0)
-//                ConstraintLayout.getSharedValues().fireNewValue(R.id.split,0)
-
-            }
+            changeLayout()
         }
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+
+        chatToggle = savedInstanceState.getBoolean(STATE_CHAT)
+        spanToggle = savedInstanceState.getBoolean(STATE_SPAN)
+        player.playWhenReady = savedInstanceState.getBoolean(STATE_PLAY_WHEN_READY)
+        player.seekTo(savedInstanceState.getInt(STATE_CURRENT_WINDOW_INDEX), savedInstanceState.getLong(STATE_CURRENT_POSITION))
+        player.prepare()
     }
 
     override fun onStop() {
@@ -78,37 +83,59 @@ class MainActivity : AppCompatActivity() {
         windowManager.unregisterLayoutChangeCallback(stateContainer)
     }
 
-    inner class StateContainer : Consumer<WindowLayoutInfo> {
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.run{
+            putBoolean(STATE_CHAT, chatToggle)
+            putBoolean(STATE_SPAN, spanToggle)
+            putBoolean(STATE_PLAY_WHEN_READY, player.playWhenReady)
+            putLong(STATE_CURRENT_POSITION, player.currentPosition)
+            putInt(STATE_CURRENT_WINDOW_INDEX, player.currentWindowIndex)
+        }
 
+        super.onSaveInstanceState(outState)
+    }
+
+    fun changeLayout() {
+        if (spanToggle) {
+            if (chatToggle) {
+                ConstraintLayout.getSharedValues().fireNewValue(R.id.split, 0)
+                ConstraintLayout.getSharedValues().fireNewValue(R.id.fold, 1434)
+            }
+            else {
+                ConstraintLayout.getSharedValues().fireNewValue(R.id.split, 0)
+                ConstraintLayout.getSharedValues().fireNewValue(R.id.fold, 0)
+            }
+        }
+        else {
+            if (chatToggle) {
+                ConstraintLayout.getSharedValues().fireNewValue(R.id.split, 1000)
+                ConstraintLayout.getSharedValues().fireNewValue(R.id.fold, 0)
+            }
+            else {
+                ConstraintLayout.getSharedValues().fireNewValue(R.id.split, 0)
+                ConstraintLayout.getSharedValues().fireNewValue(R.id.fold, 0)
+            }
+        }
+    }
+
+    companion object {
+        val STATE_CHAT = "chatToggle"
+        val STATE_SPAN = "spanToggle"
+        val STATE_PLAY_WHEN_READY = "playerPlayWhenReady"
+        val STATE_CURRENT_POSITION = "playerPlaybackPosition"
+        val STATE_CURRENT_WINDOW_INDEX = "playerCurrentWindowIndex"
+    }
+
+    inner class StateContainer : Consumer<WindowLayoutInfo> {
         override fun accept(newLayoutInfo: WindowLayoutInfo) {
             // Add views that represent display features
-            for (displayFeature in newLayoutInfo.displayFeatures) {
-                val foldFeature = displayFeature as? FoldingFeature
-                if (foldFeature != null) {
-                    if (foldFeature.isSeparating && // isSeparating not responding as expected on 7" & 8" emulators...
-                        foldFeature.orientation == FoldingFeature.ORIENTATION_HORIZONTAL
-                    ) {
-                        //HACK:
-                        if (foldFeature.state == FoldingFeature.STATE_HALF_OPENED) { // this replaces isSeparating (temporarily)
-                            val fold = 0 //foldPosition(motionLayout, foldFeature)
-//                            ConstraintLayout.getSharedValues().fireNewValue(R.id.fold, fold)
-//                            playerView.useController = false // use other screen controls
-                        } else
-                        {
-//                            ConstraintLayout.getSharedValues().fireNewValue(R.id.fold, 0);
-//                            playerView.useController = true // use on-video controls
-                        }
-                        //ORIG:
-                        // The foldable device is in tabletop mode
-                        //val fold = foldPosition(motionLayout, foldFeature)
-                        //ConstraintLayout.getSharedValues().fireNewValue(R.id.fold, fold)
-                        //playerView.useController = false // use other screen controls
-                    } else {
-//                        ConstraintLayout.getSharedValues().fireNewValue(R.id.fold, 0);
-//                        playerView.useController = true // use on-video controls
-                    }
+            spanToggle = false
+            for (displayFeature : DisplayFeature in newLayoutInfo.displayFeatures) {
+                if (displayFeature is FoldingFeature){
+                    spanToggle = true
                 }
             }
+            changeLayout()
         }
     }
 }

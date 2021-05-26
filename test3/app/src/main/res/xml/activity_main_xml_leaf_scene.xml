@@ -19,21 +19,6 @@
         </KeyFrameSet>
     </Transition>
 
-    <ConstraintSet android:id="@+id/leafChat" >
-        <Constraint
-            android:id="@+id/split"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            motion:layout_constraintGuide_end="200dp" />
-        <Constraint
-            motion:layout_constraintStart_toStartOf="parent"
-            android:id="@+id/leaf" />
-    </ConstraintSet>
-    <ConstraintSet android:id="@+id/leafFull" >
-        <Constraint
-            android:id="@+id/split"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            motion:layout_constraintGuide_end="0dp" />
-    </ConstraintSet>
+    <ConstraintSet android:id="@+id/leafChat" ></ConstraintSet>
+    <ConstraintSet android:id="@+id/leafFull" ></ConstraintSet>
 </MotionScene>

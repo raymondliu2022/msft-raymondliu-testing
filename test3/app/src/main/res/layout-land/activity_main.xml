@@ -13,8 +13,8 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         app:layoutDescription="@xml/activity_main_xml_leaf_scene"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/fold"
+        app:layout_constraintBottom_toTopOf="@id/fold"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -35,8 +35,8 @@
             android:layout_height="0dp"
             android:background="@color/black"
 
-            app:layout_constraintBottom_toTopOf="@+id/split"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/split"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:show_buffering="when_playing"
@@ -46,7 +46,7 @@
             android:id="@+id/split"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:orientation="vertical"
             app:layout_constraintGuide_end="0dp"
 
             app:reactiveGuide_animateChange="true"
@@ -62,8 +62,8 @@
             android:background="@color/teal_200"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/split" />
+            app:layout_constraintStart_toEndOf="@+id/split"
+            app:layout_constraintTop_toBottomOf="parent" />
 
     </androidx.constraintlayout.motion.widget.MotionLayout>
 
@@ -71,7 +71,7 @@
         android:id="@+id/fold"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         app:layout_constraintGuide_end="0dp"
         app:reactiveGuide_animateChange="true"
         app:reactiveGuide_applyToAllConstraintSets="true"
@@ -85,7 +85,7 @@
         android:background="@color/teal_200"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/fold"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/fold" />
 
 </androidx.constraintlayout.motion.widget.MotionLayout>
