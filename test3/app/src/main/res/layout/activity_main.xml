@@ -5,54 +5,87 @@
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/black"
     app:layoutDescription="@xml/activity_main_scene"
     tools:context=".MainActivity">
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/chatEnableButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:clickable="true"
-        app:fabSize="mini"
-        app:layout_constraintEnd_toEndOf="parent"
+    <androidx.constraintlayout.motion.widget.MotionLayout
+        android:id="@+id/leaf"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        app:layoutDescription="@xml/activity_main_xml_leaf_scene"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:srcCompat="@android:drawable/stat_notify_chat" />
-
-    <com.google.android.exoplayer2.ui.StyledPlayerView
-        android:id="@+id/player_view"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:background="@color/black"
-
-        app:layout_constraintBottom_toTopOf="@+id/split"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/fold"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:show_buffering="when_playing"
-        app:show_shuffle_button="true" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/chatEnableButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:background="@color/purple_200"
+            app:fabSize="mini"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:srcCompat="@android:drawable/stat_notify_chat" />
+
+        <com.google.android.exoplayer2.ui.StyledPlayerView
+            android:id="@+id/player_view"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:background="@color/black"
+
+            app:layout_constraintBottom_toTopOf="@+id/split"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:show_buffering="when_playing"
+            app:show_shuffle_button="true" />
+
+        <androidx.constraintlayout.widget.ReactiveGuide
+            android:id="@+id/split"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_end="0dp"
+
+            app:reactiveGuide_animateChange="true"
+            app:reactiveGuide_applyToAllConstraintSets="true"
+
+            app:reactiveGuide_valueId="@id/split"
+            tools:layout_editor_absoluteY="731dp" />
+
+        <View
+            android:id="@+id/mini_chat_view"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@color/teal_200"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/split" />
+
+    </androidx.constraintlayout.motion.widget.MotionLayout>
 
     <androidx.constraintlayout.widget.ReactiveGuide
-        android:id="@+id/split"
+        android:id="@+id/fold"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         app:layout_constraintGuide_end="0dp"
-
         app:reactiveGuide_animateChange="true"
         app:reactiveGuide_applyToAllConstraintSets="true"
-
-        app:reactiveGuide_valueId="@id/split"
-        tools:layout_editor_absoluteY="731dp" />
+        app:reactiveGuide_valueId="@id/fold"
+        tools:layout_editor_absoluteX="411dp" />
 
     <View
-        android:id="@+id/mini_chat_view"
+        android:id="@+id/mega_chat_view"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="@color/purple_200"
+        android:background="@color/teal_200"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/split" />
+        app:layout_constraintStart_toEndOf="@id/fold"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.motion.widget.MotionLayout>
