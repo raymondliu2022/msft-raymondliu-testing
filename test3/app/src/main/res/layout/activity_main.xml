@@ -14,7 +14,7 @@
         android:layout_height="match_parent"
         app:layoutDescription="@xml/activity_main_xml_leaf_scene"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/fold"
+        app:layout_constraintEnd_toStartOf="@id/vertical_start_guide"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -35,7 +35,7 @@
             android:layout_height="0dp"
             android:background="@color/black"
 
-            app:layout_constraintBottom_toTopOf="@+id/split"
+            app:layout_constraintBottom_toTopOf="@+id/horizontal_top_guide"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -43,7 +43,7 @@
             app:show_shuffle_button="true" />
 
         <androidx.constraintlayout.widget.ReactiveGuide
-            android:id="@+id/split"
+            android:id="@+id/horizontal_top_guide"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -52,7 +52,20 @@
             app:reactiveGuide_animateChange="true"
             app:reactiveGuide_applyToAllConstraintSets="true"
 
-            app:reactiveGuide_valueId="@id/split"
+            app:reactiveGuide_valueId="@id/horizontal_top_guide"
+            tools:layout_editor_absoluteY="731dp" />
+
+        <androidx.constraintlayout.widget.ReactiveGuide
+            android:id="@+id/horizontal_bottom_guide"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_end="0dp"
+
+            app:reactiveGuide_animateChange="true"
+            app:reactiveGuide_applyToAllConstraintSets="true"
+
+            app:reactiveGuide_valueId="@id/horizontal_top_guide"
             tools:layout_editor_absoluteY="731dp" />
 
         <View
@@ -63,19 +76,30 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/split" />
+            app:layout_constraintTop_toBottomOf="@+id/horizontal_bottom_guide" />
 
     </androidx.constraintlayout.motion.widget.MotionLayout>
 
     <androidx.constraintlayout.widget.ReactiveGuide
-        android:id="@+id/fold"
+        android:id="@+id/vertical_start_guide"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         app:layout_constraintGuide_end="0dp"
         app:reactiveGuide_animateChange="true"
         app:reactiveGuide_applyToAllConstraintSets="true"
-        app:reactiveGuide_valueId="@id/fold"
+        app:reactiveGuide_valueId="@id/vertical_start_guide"
+        tools:layout_editor_absoluteX="411dp" />
+
+    <androidx.constraintlayout.widget.ReactiveGuide
+        android:id="@+id/vertical_end_guide"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_end="0dp"
+        app:reactiveGuide_animateChange="true"
+        app:reactiveGuide_applyToAllConstraintSets="true"
+        app:reactiveGuide_valueId="@id/vertical_start_guide"
         tools:layout_editor_absoluteX="411dp" />
 
     <View
@@ -85,7 +109,7 @@
         android:background="@color/teal_200"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/fold"
+        app:layout_constraintStart_toEndOf="@id/vertical_end_guide"
         app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.motion.widget.MotionLayout>

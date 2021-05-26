@@ -1,12 +1,14 @@
 package com.example.test3
 
+import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.View
+import android.util.Log
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ReactiveGuide
 import androidx.core.util.Consumer
 import androidx.window.DisplayFeature
 import androidx.window.FoldingFeature
@@ -32,6 +34,9 @@ class MainActivity : AppCompatActivity() {
 
     private var chatToggle: Boolean = true
     private var spanToggle: Boolean = false
+    private var spanOrientation: Int = FoldingFeature.ORIENTATION_VERTICAL
+    private var spanValue1: Int = 0
+    private var spanValue2: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,25 +100,40 @@ class MainActivity : AppCompatActivity() {
         super.onSaveInstanceState(outState)
     }
 
+    fun setGuides(horizontal_top : Int, horizontal_bottom : Int, vertical_start : Int, vertical_end : Int) {
+        with (ConstraintLayout.getSharedValues()) {
+            fireNewValue(R.id.horizontal_top_guide, horizontal_top)
+            fireNewValue(R.id.horizontal_bottom_guide, horizontal_bottom)
+            fireNewValue(R.id.vertical_start_guide, vertical_start)
+            fireNewValue(R.id.vertical_end_guide, vertical_end)
+        }
+    }
+
     fun changeLayout() {
         if (spanToggle) {
-            if (chatToggle) {
-                ConstraintLayout.getSharedValues().fireNewValue(R.id.split, 0)
-                ConstraintLayout.getSharedValues().fireNewValue(R.id.fold, 1434)
+            if (spanOrientation == FoldingFeature.ORIENTATION_HORIZONTAL) {
+                setGuides(spanValue1, spanValue2, 0, 0)
             }
             else {
-                ConstraintLayout.getSharedValues().fireNewValue(R.id.split, 0)
-                ConstraintLayout.getSharedValues().fireNewValue(R.id.fold, 0)
+                if (chatToggle) {
+                    setGuides(0, 0, spanValue1, spanValue2)
+                }
+                else {
+                    setGuides(0, 0, 0, 0)
+                }
             }
         }
         else {
             if (chatToggle) {
-                ConstraintLayout.getSharedValues().fireNewValue(R.id.split, 1000)
-                ConstraintLayout.getSharedValues().fireNewValue(R.id.fold, 0)
+                if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    setGuides(0, 0, 300, 300)
+                }
+                else {
+                    setGuides(300, 300, 0, 0)
+                }
             }
             else {
-                ConstraintLayout.getSharedValues().fireNewValue(R.id.split, 0)
-                ConstraintLayout.getSharedValues().fireNewValue(R.id.fold, 0)
+                setGuides(0, 0, 0, 0)
             }
         }
     }
@@ -133,6 +153,18 @@ class MainActivity : AppCompatActivity() {
             for (displayFeature : DisplayFeature in newLayoutInfo.displayFeatures) {
                 if (displayFeature is FoldingFeature){
                     spanToggle = true
+                    spanOrientation = displayFeature.orientation
+                    val point = IntArray(2)
+                    rootMotionLayout.getLocationInWindow(point)
+                    Log.d("REEEE", displayFeature.bounds.toString())
+                    if (spanOrientation == FoldingFeature.ORIENTATION_HORIZONTAL) {
+                        spanValue1 = displayFeature.bounds.bottom
+                        spanValue2 = displayFeature.bounds.top
+                    }
+                    else {
+                        spanValue1 = displayFeature.bounds.right
+                        spanValue2 = displayFeature.bounds.left
+                    }
                 }
             }
             changeLayout()
