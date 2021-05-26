@@ -1,5 +1,6 @@
 package com.example.test3
 
+import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
@@ -20,7 +21,6 @@ import java.util.concurrent.Executor
 
 class MainActivity : AppCompatActivity() {
     private lateinit var rootMotionLayout: MotionLayout
-    private lateinit var leafMotionLayout: MotionLayout
     private lateinit var windowManager: WindowManager
     private val handler = Handler(Looper.getMainLooper())
     private val mainThreadExecutor = Executor { r: Runnable -> handler.post(r) }
@@ -44,7 +44,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         rootMotionLayout = findViewById<MotionLayout>(R.id.root)
-        leafMotionLayout = findViewById<MotionLayout>(R.id.leaf)
         chatEnableButton = findViewById<FloatingActionButton>(R.id.chatEnableButton)
 
         playerView = findViewById(R.id.player_view);
@@ -96,26 +95,28 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun changeLayout() {
-        if (spanToggle) {
+        var splitValue: Int = 0
+        if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             if (chatToggle) {
-                ConstraintLayout.getSharedValues().fireNewValue(R.id.split, 0)
-                ConstraintLayout.getSharedValues().fireNewValue(R.id.fold, 1434)
-            }
-            else {
-                ConstraintLayout.getSharedValues().fireNewValue(R.id.split, 0)
-                ConstraintLayout.getSharedValues().fireNewValue(R.id.fold, 0)
+                if (spanToggle) {
+                    splitValue = 1434
+                }
+                else {
+                    splitValue = 300
+                }
             }
         }
         else {
-            if (chatToggle) {
-                ConstraintLayout.getSharedValues().fireNewValue(R.id.split, 1000)
-                ConstraintLayout.getSharedValues().fireNewValue(R.id.fold, 0)
+            if (spanToggle) {
+                splitValue = 1434
             }
             else {
-                ConstraintLayout.getSharedValues().fireNewValue(R.id.split, 0)
-                ConstraintLayout.getSharedValues().fireNewValue(R.id.fold, 0)
+                if (chatToggle) {
+                    splitValue = 500
+                }
             }
         }
+        ConstraintLayout.getSharedValues().fireNewValue(R.id.split, splitValue)
     }
 
     companion object {
