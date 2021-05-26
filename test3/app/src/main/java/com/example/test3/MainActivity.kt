@@ -6,10 +6,14 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.View
+import android.view.ViewGroup
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ReactiveGuide
 import androidx.core.util.Consumer
+import androidx.core.view.marginBottom
+import androidx.core.view.marginEnd
 import androidx.window.DisplayFeature
 import androidx.window.FoldingFeature
 import androidx.window.WindowLayoutInfo
@@ -24,6 +28,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var rootMotionLayout: MotionLayout
     private lateinit var leafMotionLayout: MotionLayout
     private lateinit var windowManager: WindowManager
+    private lateinit var megaChatView: View
+    private lateinit var miniChatView: View
     private val handler = Handler(Looper.getMainLooper())
     private val mainThreadExecutor = Executor { r: Runnable -> handler.post(r) }
     private val stateContainer = StateContainer()
@@ -35,8 +41,7 @@ class MainActivity : AppCompatActivity() {
     private var chatToggle: Boolean = true
     private var spanToggle: Boolean = false
     private var spanOrientation: Int = FoldingFeature.ORIENTATION_VERTICAL
-    private var spanValue1: Int = 0
-    private var spanValue2: Int = 0
+    private var spanValue: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,6 +56,8 @@ class MainActivity : AppCompatActivity() {
         rootMotionLayout = findViewById<MotionLayout>(R.id.root)
         leafMotionLayout = findViewById<MotionLayout>(R.id.leaf)
         chatEnableButton = findViewById<FloatingActionButton>(R.id.chatEnableButton)
+        megaChatView = findViewById<ReactiveGuide>(R.id.mega_chat_view)
+        miniChatView = findViewById<ReactiveGuide>(R.id.mini_chat_view)
 
         playerView = findViewById(R.id.player_view);
         player = SimpleExoPlayer.Builder(this).build()
@@ -100,40 +107,38 @@ class MainActivity : AppCompatActivity() {
         super.onSaveInstanceState(outState)
     }
 
-    fun setGuides(horizontal_top : Int, horizontal_bottom : Int, vertical_start : Int, vertical_end : Int) {
+    fun setGuides(horizontal : Int, vertical : Int) {
         with (ConstraintLayout.getSharedValues()) {
-            fireNewValue(R.id.horizontal_top_guide, horizontal_top)
-            fireNewValue(R.id.horizontal_bottom_guide, horizontal_bottom)
-            fireNewValue(R.id.vertical_start_guide, vertical_start)
-            fireNewValue(R.id.vertical_end_guide, vertical_end)
+            fireNewValue(R.id.horizontal_guide, horizontal)
+            fireNewValue(R.id.vertical_guide, vertical)
         }
     }
 
     fun changeLayout() {
         if (spanToggle) {
             if (spanOrientation == FoldingFeature.ORIENTATION_HORIZONTAL) {
-                setGuides(spanValue1, spanValue2, 0, 0)
+                setGuides(spanValue, 0)
             }
             else {
                 if (chatToggle) {
-                    setGuides(0, 0, spanValue1, spanValue2)
+                    setGuides(0, spanValue)
                 }
                 else {
-                    setGuides(0, 0, 0, 0)
+                    setGuides(0, 0)
                 }
             }
         }
         else {
             if (chatToggle) {
                 if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                    setGuides(0, 0, 300, 300)
+                    setGuides(0, 300)
                 }
                 else {
-                    setGuides(300, 300, 0, 0)
+                    setGuides(300, 0)
                 }
             }
             else {
-                setGuides(0, 0, 0, 0)
+                setGuides(0, 0)
             }
         }
     }
@@ -150,20 +155,22 @@ class MainActivity : AppCompatActivity() {
         override fun accept(newLayoutInfo: WindowLayoutInfo) {
             // Add views that represent display features
             spanToggle = false
+
+            megaChatView.setPadding(0,0,0,0)
+            miniChatView.setPadding(0,0,0,0)
             for (displayFeature : DisplayFeature in newLayoutInfo.displayFeatures) {
                 if (displayFeature is FoldingFeature){
                     spanToggle = true
                     spanOrientation = displayFeature.orientation
                     val point = IntArray(2)
                     rootMotionLayout.getLocationInWindow(point)
-                    Log.d("REEEE", displayFeature.bounds.toString())
                     if (spanOrientation == FoldingFeature.ORIENTATION_HORIZONTAL) {
-                        spanValue1 = displayFeature.bounds.bottom
-                        spanValue2 = displayFeature.bounds.top
+                        spanValue = displayFeature.bounds.bottom
+                        miniChatView.setPadding(0,displayFeature.bounds.height(),0,0)
                     }
                     else {
-                        spanValue1 = displayFeature.bounds.right
-                        spanValue2 = displayFeature.bounds.left
+                        spanValue = displayFeature.bounds.right
+                        megaChatView.setPadding(displayFeature.bounds.width(),0,0,0)
                     }
                 }
             }

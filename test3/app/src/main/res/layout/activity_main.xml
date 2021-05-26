@@ -5,6 +5,7 @@
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/teal_200"
     app:layoutDescription="@xml/activity_main_scene"
     tools:context=".MainActivity">
 
@@ -12,9 +13,10 @@
         android:id="@+id/leaf"
         android:layout_width="0dp"
         android:layout_height="match_parent"
+        android:background="@color/teal_200"
         app:layoutDescription="@xml/activity_main_xml_leaf_scene"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/vertical_start_guide"
+        app:layout_constraintEnd_toStartOf="@id/vertical_guide"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -23,10 +25,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:clickable="true"
-            android:background="@color/purple_200"
             app:fabSize="mini"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@android:drawable/stat_notify_chat" />
 
         <com.google.android.exoplayer2.ui.StyledPlayerView
@@ -35,7 +36,7 @@
             android:layout_height="0dp"
             android:background="@color/black"
 
-            app:layout_constraintBottom_toTopOf="@+id/horizontal_top_guide"
+            app:layout_constraintBottom_toTopOf="@+id/horizontal_guide"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -43,7 +44,7 @@
             app:show_shuffle_button="true" />
 
         <androidx.constraintlayout.widget.ReactiveGuide
-            android:id="@+id/horizontal_top_guide"
+            android:id="@+id/horizontal_guide"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -52,64 +53,40 @@
             app:reactiveGuide_animateChange="true"
             app:reactiveGuide_applyToAllConstraintSets="true"
 
-            app:reactiveGuide_valueId="@id/horizontal_top_guide"
+            app:reactiveGuide_valueId="@id/horizontal_guide"
             tools:layout_editor_absoluteY="731dp" />
 
-        <androidx.constraintlayout.widget.ReactiveGuide
-            android:id="@+id/horizontal_bottom_guide"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            app:layout_constraintGuide_end="0dp"
-
-            app:reactiveGuide_animateChange="true"
-            app:reactiveGuide_applyToAllConstraintSets="true"
-
-            app:reactiveGuide_valueId="@id/horizontal_top_guide"
-            tools:layout_editor_absoluteY="731dp" />
-
-        <View
+        <EditText
             android:id="@+id/mini_chat_view"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:background="@color/teal_200"
+            android:background="@color/purple_200"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/horizontal_bottom_guide" />
+            app:layout_constraintTop_toBottomOf="@+id/horizontal_guide" />
 
     </androidx.constraintlayout.motion.widget.MotionLayout>
 
     <androidx.constraintlayout.widget.ReactiveGuide
-        android:id="@+id/vertical_start_guide"
+        android:id="@+id/vertical_guide"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         app:layout_constraintGuide_end="0dp"
         app:reactiveGuide_animateChange="true"
         app:reactiveGuide_applyToAllConstraintSets="true"
-        app:reactiveGuide_valueId="@id/vertical_start_guide"
+        app:reactiveGuide_valueId="@id/vertical_guide"
         tools:layout_editor_absoluteX="411dp" />
 
-    <androidx.constraintlayout.widget.ReactiveGuide
-        android:id="@+id/vertical_end_guide"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_end="0dp"
-        app:reactiveGuide_animateChange="true"
-        app:reactiveGuide_applyToAllConstraintSets="true"
-        app:reactiveGuide_valueId="@id/vertical_start_guide"
-        tools:layout_editor_absoluteX="411dp" />
-
-    <View
+    <EditText
         android:id="@+id/mega_chat_view"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="@color/teal_200"
+        android:background="@color/purple_200"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/vertical_end_guide"
+        app:layout_constraintStart_toEndOf="@id/vertical_guide"
         app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.motion.widget.MotionLayout>
