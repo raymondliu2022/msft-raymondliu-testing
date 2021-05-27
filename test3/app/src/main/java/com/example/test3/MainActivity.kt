@@ -102,14 +102,15 @@ class MainActivity : AppCompatActivity() {
     fun setGuides(horizontal : Int, vertical : Int) {
         Log.d("CHANGE_LAYOUT", "Fired: X = " +  vertical + " Y = " + horizontal)
 
-//        var constraintSet = ConstraintSet()
-//        constraintSet.clone(rootView)
-//        constraintSet.setGuidelineEnd(R.id.horizontal_guide, horizontal)
-//        constraintSet.setGuidelineEnd(R.id.vertical_guide, vertical)
-//        rootView.updateStateAnimate(1,constraintSet, 500)
-        with (ConstraintLayout.getSharedValues()) {
-            fireNewValue(R.id.horizontal_guide, horizontal)
-            fireNewValue(R.id.vertical_guide, vertical)
+        if (horizontal == 0 && vertical == 0) {
+            rootView.transitionToState(R.id.fullscreen)
+        }
+        else {
+            var constraintSet = rootView.getConstraintSet(R.id.chat)
+            constraintSet.setGuidelineEnd(R.id.horizontal_guide, horizontal)
+            constraintSet.setGuidelineEnd(R.id.vertical_guide, vertical)
+            rootView.updateState(R.id.chat, constraintSet)
+            rootView.transitionToState(R.id.chat)
         }
     }
 
