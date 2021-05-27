@@ -77,7 +77,6 @@ class MainActivity : AppCompatActivity() {
 
         chatEnableButton.setOnClickListener { view ->
             chatToggle = !chatToggle
-            Log.d("CHANGE_LAYOUT", "triggered by chat button")
             changeLayout()
         }
     }
@@ -110,6 +109,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun setGuides(horizontal : Int, vertical : Int) {
+        Log.d("CHANGE_LAYOUT", "Fired: X = " +  vertical + " Y = " + horizontal)
+
+
         with (ConstraintLayout.getSharedValues()) {
             fireNewValue(R.id.horizontal_guide, horizontal)
             fireNewValue(R.id.vertical_guide, vertical)
@@ -185,7 +187,6 @@ class MainActivity : AppCompatActivity() {
             miniChatView.setPadding(0,0,0,0)
             for (displayFeature : DisplayFeature in newLayoutInfo.displayFeatures) {
                 if (displayFeature is FoldingFeature){
-                    Log.d("CHANGE_LAYOUT", displayFeature.toString())
                     spanToggle = true
                     spanOrientation = displayFeature.orientation
                     if (spanOrientation == FoldingFeature.ORIENTATION_HORIZONTAL) {
@@ -198,7 +199,6 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
-            Log.d("CHANGE_LAYOUT", "triggered by state container")
             changeLayout()
         }
     }
