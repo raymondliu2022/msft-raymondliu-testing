@@ -84,6 +84,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
+        player.stop()
         windowManager.unregisterLayoutChangeCallback(stateContainer)
     }
 
