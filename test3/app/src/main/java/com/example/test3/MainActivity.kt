@@ -14,6 +14,9 @@ import androidx.constraintlayout.widget.ReactiveGuide
 import androidx.core.util.Consumer
 import androidx.core.view.marginBottom
 import androidx.core.view.marginEnd
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.commit
 import androidx.window.DisplayFeature
 import androidx.window.FoldingFeature
 import androidx.window.WindowLayoutInfo
@@ -28,6 +31,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var rootMotionLayout: MotionLayout
     private lateinit var leafMotionLayout: MotionLayout
     private lateinit var windowManager: WindowManager
+    private lateinit var chatFragment: ChatFragment
     private lateinit var megaChatView: View
     private lateinit var miniChatView: View
     private val handler = Handler(Looper.getMainLooper())
@@ -46,11 +50,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        chatToggle = true
-        spanToggle = false
-
         windowManager = WindowManager(this)
-
+        chatFragment = ChatFragment()
         setContentView(R.layout.activity_main)
 
         rootMotionLayout = findViewById<MotionLayout>(R.id.root)
@@ -76,6 +77,7 @@ class MainActivity : AppCompatActivity() {
 
         chatEnableButton.setOnClickListener { view ->
             chatToggle = !chatToggle
+            Log.d("CHANGE_LAYOUT", "triggered by chat button")
             changeLayout()
         }
     }
@@ -115,15 +117,35 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun changeLayout() {
+        //if app is spanned across a fold
         if (spanToggle) {
+            //if fold is horizontal
             if (spanOrientation == FoldingFeature.ORIENTATION_HORIZONTAL) {
-                setGuides(spanValue, 0)
+                //if chat is on
+                if (chatToggle) {
+                    Log.d("CHANGE_LAYOUT", "horizontal span, chat")
+                    setGuides(spanValue, 0)
+                }
+                else {
+                    //if combined screen is landscape
+                    if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                        Log.d("CHANGE_LAYOUT", "horizontal span, landscape")
+                        setGuides(0, 0)
+                    }
+                    else {
+                        Log.d("CHANGE_LAYOUT", "horizontal span, portrait")
+                        setGuides(spanValue, 0)
+                    }
+                }
             }
             else {
+                //if chat is on
                 if (chatToggle) {
+                    Log.d("CHANGE_LAYOUT", "vertical span, chat")
                     setGuides(0, spanValue)
                 }
                 else {
+                    Log.d("CHANGE_LAYOUT", "vertical span, chat")
                     setGuides(0, 0)
                 }
             }
@@ -131,13 +153,16 @@ class MainActivity : AppCompatActivity() {
         else {
             if (chatToggle) {
                 if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                    setGuides(0, 300)
+                    Log.d("CHANGE_LAYOUT", "chat, landscape")
+                    setGuides(0, 600)
                 }
                 else {
-                    setGuides(300, 0)
+                    Log.d("CHANGE_LAYOUT", "chat, portrait")
+                    setGuides(900, 0)
                 }
             }
             else {
+                Log.d("CHANGE_LAYOUT", "none")
                 setGuides(0, 0)
             }
         }
@@ -160,10 +185,9 @@ class MainActivity : AppCompatActivity() {
             miniChatView.setPadding(0,0,0,0)
             for (displayFeature : DisplayFeature in newLayoutInfo.displayFeatures) {
                 if (displayFeature is FoldingFeature){
+                    Log.d("CHANGE_LAYOUT", displayFeature.toString())
                     spanToggle = true
                     spanOrientation = displayFeature.orientation
-                    val point = IntArray(2)
-                    rootMotionLayout.getLocationInWindow(point)
                     if (spanOrientation == FoldingFeature.ORIENTATION_HORIZONTAL) {
                         spanValue = displayFeature.bounds.bottom
                         miniChatView.setPadding(0,displayFeature.bounds.height(),0,0)
@@ -174,6 +198,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
+            Log.d("CHANGE_LAYOUT", "triggered by state container")
             changeLayout()
         }
     }

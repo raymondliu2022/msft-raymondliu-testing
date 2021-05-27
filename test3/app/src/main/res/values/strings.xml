@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">test3</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="chat_text_1">sadge D:</string>
+    <string name="chat_text_2">LOL</string>
+    <string name="chat_text_3">LULW</string>
+    <string name="chat_text_4">NOPERS</string>
+    <string name="chat_text_5">D:</string>
+    <string name="chat_text_6">Anarchy time</string>
+    <string name="chat_text_7">Lilybonk</string>
 </resources>

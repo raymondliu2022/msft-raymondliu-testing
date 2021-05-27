@@ -24,6 +24,7 @@
             android:id="@+id/chatEnableButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:backgroundTint="@color/purple_200"
             android:clickable="true"
             app:fabSize="mini"
             app:layout_constraintEnd_toEndOf="parent"
@@ -54,13 +55,14 @@
             app:reactiveGuide_applyToAllConstraintSets="true"
 
             app:reactiveGuide_valueId="@id/horizontal_guide"
-            tools:layout_editor_absoluteY="731dp" />
+            tools:layout_editor_absoluteY="300dp" />
 
-        <EditText
+        <androidx.fragment.app.FragmentContainerView
             android:id="@+id/mini_chat_view"
-            android:layout_width="0dp"
+            android:name="com.example.test3.ChatFragment"
+            android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:background="@color/purple_200"
+            android:background="@color/black"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -77,13 +79,14 @@
         app:reactiveGuide_animateChange="true"
         app:reactiveGuide_applyToAllConstraintSets="true"
         app:reactiveGuide_valueId="@id/vertical_guide"
-        tools:layout_editor_absoluteX="411dp" />
+        tools:layout_editor_absoluteX="300dp" />
 
-    <EditText
+    <androidx.fragment.app.FragmentContainerView
         android:id="@+id/mega_chat_view"
+        android:name="com.example.test3.ChatFragment"
         android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="@color/purple_200"
+        android:layout_height="match_parent"
+        android:background="@color/black"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/vertical_guide"
