@@ -7,16 +7,11 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.View
-import android.view.ViewGroup
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.constraintlayout.widget.ReactiveGuide
 import androidx.core.util.Consumer
-import androidx.core.view.marginBottom
-import androidx.core.view.marginEnd
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.commit
 import androidx.window.DisplayFeature
 import androidx.window.FoldingFeature
 import androidx.window.WindowLayoutInfo
@@ -28,12 +23,10 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.concurrent.Executor
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var rootMotionLayout: MotionLayout
-    private lateinit var leafMotionLayout: MotionLayout
+    private lateinit var rootView: MotionLayout
     private lateinit var windowManager: WindowManager
-    private lateinit var chatFragment: ChatFragment
-    private lateinit var megaChatView: View
-    private lateinit var miniChatView: View
+    private lateinit var endChatView: View
+    private lateinit var bottomChatView: View
     private val handler = Handler(Looper.getMainLooper())
     private val mainThreadExecutor = Executor { r: Runnable -> handler.post(r) }
     private val stateContainer = StateContainer()
@@ -51,14 +44,12 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         windowManager = WindowManager(this)
-        chatFragment = ChatFragment()
         setContentView(R.layout.activity_main)
 
-        rootMotionLayout = findViewById<MotionLayout>(R.id.root)
-        leafMotionLayout = findViewById<MotionLayout>(R.id.leaf)
+        rootView = findViewById<MotionLayout>(R.id.root)
         chatEnableButton = findViewById<FloatingActionButton>(R.id.chatEnableButton)
-        megaChatView = findViewById<ReactiveGuide>(R.id.mega_chat_view)
-        miniChatView = findViewById<ReactiveGuide>(R.id.mini_chat_view)
+        endChatView = findViewById<ReactiveGuide>(R.id.end_chat_view)
+        bottomChatView = findViewById<ReactiveGuide>(R.id.bottom_chat_view)
 
         playerView = findViewById(R.id.player_view);
         player = SimpleExoPlayer.Builder(this).build()
@@ -111,7 +102,11 @@ class MainActivity : AppCompatActivity() {
     fun setGuides(horizontal : Int, vertical : Int) {
         Log.d("CHANGE_LAYOUT", "Fired: X = " +  vertical + " Y = " + horizontal)
 
-
+//        var constraintSet = ConstraintSet()
+//        constraintSet.clone(rootView)
+//        constraintSet.setGuidelineEnd(R.id.horizontal_guide, horizontal)
+//        constraintSet.setGuidelineEnd(R.id.vertical_guide, vertical)
+//        rootView.updateStateAnimate(1,constraintSet, 500)
         with (ConstraintLayout.getSharedValues()) {
             fireNewValue(R.id.horizontal_guide, horizontal)
             fireNewValue(R.id.vertical_guide, vertical)
@@ -183,19 +178,19 @@ class MainActivity : AppCompatActivity() {
             // Add views that represent display features
             spanToggle = false
 
-            megaChatView.setPadding(0,0,0,0)
-            miniChatView.setPadding(0,0,0,0)
+            endChatView.setPadding(0,0,0,0)
+            bottomChatView.setPadding(0,0,0,0)
             for (displayFeature : DisplayFeature in newLayoutInfo.displayFeatures) {
                 if (displayFeature is FoldingFeature){
                     spanToggle = true
                     spanOrientation = displayFeature.orientation
                     if (spanOrientation == FoldingFeature.ORIENTATION_HORIZONTAL) {
                         spanValue = displayFeature.bounds.bottom
-                        miniChatView.setPadding(0,displayFeature.bounds.height(),0,0)
+                        bottomChatView.setPadding(0,displayFeature.bounds.height(),0,0)
                     }
                     else {
                         spanValue = displayFeature.bounds.right
-                        megaChatView.setPadding(displayFeature.bounds.width(),0,0,0)
+                        endChatView.setPadding(displayFeature.bounds.width(),0,0,0)
                     }
                 }
             }

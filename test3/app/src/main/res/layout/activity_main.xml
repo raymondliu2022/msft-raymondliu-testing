@@ -5,70 +5,46 @@
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/teal_200"
+    android:background="@color/white"
     app:layoutDescription="@xml/activity_main_scene"
     tools:context=".MainActivity">
 
-    <androidx.constraintlayout.motion.widget.MotionLayout
-        android:id="@+id/leaf"
+    <com.google.android.exoplayer2.ui.StyledPlayerView
+        android:id="@+id/player_view"
         android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:background="@color/teal_200"
-        app:layoutDescription="@xml/activity_main_xml_leaf_scene"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/vertical_guide"
+        android:layout_height="0dp"
+        android:background="@color/black"
+
+        app:layout_constraintBottom_toTopOf="@+id/horizontal_guide"
+        app:layout_constraintEnd_toStartOf="@+id/vertical_guide"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:show_buffering="when_playing"
+        app:show_shuffle_button="true"></com.google.android.exoplayer2.ui.StyledPlayerView>
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/chatEnableButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:backgroundTint="@color/purple_200"
-            android:clickable="true"
-            app:fabSize="mini"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@android:drawable/stat_notify_chat" />
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/chatEnableButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/purple_200"
+        android:clickable="true"
+        app:fabSize="mini"
+        app:layout_constraintEnd_toEndOf="@id/player_view"
+        app:layout_constraintTop_toTopOf="@id/player_view"
+        app:srcCompat="@android:drawable/stat_notify_chat" />
 
-        <com.google.android.exoplayer2.ui.StyledPlayerView
-            android:id="@+id/player_view"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:background="@color/black"
+    <androidx.constraintlayout.widget.ReactiveGuide
+        android:id="@+id/horizontal_guide"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_end="0dp"
 
-            app:layout_constraintBottom_toTopOf="@+id/horizontal_guide"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:show_buffering="when_playing"
-            app:show_shuffle_button="true" />
+        app:reactiveGuide_animateChange="true"
+        app:reactiveGuide_applyToAllConstraintSets="true"
 
-        <androidx.constraintlayout.widget.ReactiveGuide
-            android:id="@+id/horizontal_guide"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            app:layout_constraintGuide_end="0dp"
-
-            app:reactiveGuide_animateChange="true"
-            app:reactiveGuide_applyToAllConstraintSets="true"
-
-            app:reactiveGuide_valueId="@id/horizontal_guide"
-            tools:layout_editor_absoluteY="300dp" />
-
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/mini_chat_view"
-            android:name="com.example.test3.ChatFragment"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:background="@color/black"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/horizontal_guide" />
-
-    </androidx.constraintlayout.motion.widget.MotionLayout>
+        app:reactiveGuide_valueId="@id/horizontal_guide"
+        tools:layout_editor_absoluteY="300dp" />
 
     <androidx.constraintlayout.widget.ReactiveGuide
         android:id="@+id/vertical_guide"
@@ -81,15 +57,46 @@
         app:reactiveGuide_valueId="@id/vertical_guide"
         tools:layout_editor_absoluteX="300dp" />
 
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/mega_chat_view"
-        android:name="com.example.test3.ChatFragment"
+    <View
+        android:id="@+id/bottom_chat_view"
         android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:background="@color/black"
+        android:layout_height="0dp"
+        android:background="#803F51B5"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/vertical_guide"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/horizontal_guide" />
+
+    <View
+        android:id="@+id/end_chat_view"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#80F44336"
+        app:layout_constraintBottom_toTopOf="@+id/horizontal_guide"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/vertical_guide"
+        app:layout_constraintStart_toEndOf="@+id/vertical_guide"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <!--    <androidx.fragment.app.FragmentContainerView-->
+    <!--        android:id="@+id/bottom_chat_view"-->
+    <!--        android:background="@color/black"-->
+    <!--        android:name="com.example.test3.ChatFragment"-->
+    <!--        android:layout_width="0dp"-->
+    <!--        android:layout_height="0dp"-->
+    <!--        app:layout_constraintBottom_toBottomOf="parent"-->
+    <!--        app:layout_constraintEnd_toStartOf="@+id/vertical_guide"-->
+    <!--        app:layout_constraintStart_toStartOf="parent"-->
+    <!--        app:layout_constraintTop_toBottomOf="@+id/horizontal_guide"/>-->
+
+    <!--    <androidx.fragment.app.FragmentContainerView-->
+    <!--        android:id="@+id/end_chat_view"-->
+    <!--        android:background="@color/black"-->
+    <!--        android:name="com.example.test3.ChatFragment"-->
+    <!--        android:layout_width="0dp"-->
+    <!--        android:layout_height="0dp"-->
+    <!--        app:layout_constraintBottom_toTopOf="@+id/horizontal_guide"-->
+    <!--        app:layout_constraintEnd_toEndOf="parent"-->
+    <!--        app:layout_constraintStart_toEndOf="@+id/vertical_guide"-->
+    <!--        app:layout_constraintTop_toTopOf="parent"/>-->
 
 </androidx.constraintlayout.motion.widget.MotionLayout>
