@@ -1,17 +1,21 @@
 package com.example.test3
 
 import android.content.res.Configuration
+import android.graphics.Rect
+import android.hardware.camera2.params.MeteringRectangle
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.View
+import android.view.WindowInsets
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.constraintlayout.widget.ReactiveGuide
 import androidx.core.util.Consumer
+import androidx.core.view.WindowInsetsCompat
 import androidx.window.DisplayFeature
 import androidx.window.FoldingFeature
 import androidx.window.WindowLayoutInfo
@@ -19,6 +23,7 @@ import androidx.window.WindowManager
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.ui.StyledPlayerView
+import com.google.android.exoplayer2.util.Util
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.concurrent.Executor
 
@@ -35,12 +40,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var player : SimpleExoPlayer
     private lateinit var chatEnableButton: FloatingActionButton
 
+    private var keyboardToggle: Boolean = false
     private var chatToggle: Boolean = true
     private var spanToggle: Boolean = false
     private var spanOrientation: Int = FoldingFeature.ORIENTATION_VERTICAL
     private var spanValue: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        Log.d("CHANGE_LAYOUT", "on create")
         super.onCreate(savedInstanceState)
 
         windowManager = WindowManager(this)
@@ -58,6 +65,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onStart() {
+        Log.d("CHANGE_LAYOUT", "on start")
         super.onStart()
         windowManager.registerLayoutChangeCallback(mainThreadExecutor, stateContainer)
 
@@ -69,6 +77,27 @@ class MainActivity : AppCompatActivity() {
         chatEnableButton.setOnClickListener { view ->
             chatToggle = !chatToggle
             changeLayout()
+        }
+
+        rootView.viewTreeObserver.addOnGlobalLayoutListener {
+            var tempKeyboardToggle = false
+            if (Util.SDK_INT >= 30) {
+                tempKeyboardToggle =
+                    rootView.rootWindowInsets.isVisible(WindowInsets.Type.ime()) //TEST
+            } else {
+                tempKeyboardToggle = rootView.rootWindowInsets.systemWindowInsetBottom > 200 //TEST
+            }
+            if (tempKeyboardToggle) {
+                if (!keyboardToggle) {
+                    keyboardToggle = true
+                    changeLayout()
+                }
+            } else {
+                if (keyboardToggle) {
+                    keyboardToggle = false
+                    changeLayout()
+                }
+            }
         }
     }
 
@@ -100,18 +129,24 @@ class MainActivity : AppCompatActivity() {
         super.onSaveInstanceState(outState)
     }
 
-    fun setGuides(horizontal : Int, vertical : Int) {
-        Log.d("CHANGE_LAYOUT", "Fired: X = " +  vertical + " Y = " + horizontal)
+    fun setGuides(mode: String, horizontal : Int, vertical: Int) {
 
-        if (horizontal == 0 && vertical == 0) {
-            rootView.transitionToState(R.id.fullscreen)
+        if (mode == "keyboard") {
+            var constraintSet = rootView.getConstraintSet(R.id.keyboard)
+            constraintSet.setGuidelineEnd(R.id.horizontal_guide, horizontal)
+            constraintSet.setGuidelineEnd(R.id.vertical_guide, vertical)
+            rootView.updateState(R.id.keyboard, constraintSet)
+            rootView.transitionToState(R.id.keyboard)
         }
-        else {
+        else if (mode == "chat"){
             var constraintSet = rootView.getConstraintSet(R.id.chat)
             constraintSet.setGuidelineEnd(R.id.horizontal_guide, horizontal)
             constraintSet.setGuidelineEnd(R.id.vertical_guide, vertical)
             rootView.updateState(R.id.chat, constraintSet)
             rootView.transitionToState(R.id.chat)
+        }
+        else {
+            rootView.transitionToState(R.id.fullscreen)
         }
     }
 
@@ -120,32 +155,27 @@ class MainActivity : AppCompatActivity() {
         if (spanToggle) {
             //if fold is horizontal
             if (spanOrientation == FoldingFeature.ORIENTATION_HORIZONTAL) {
-                //if chat is on
-                if (chatToggle) {
-                    Log.d("CHANGE_LAYOUT", "horizontal span, chat")
-                    setGuides(spanValue, 0)
+                if (keyboardToggle) {
+                    Log.d("CHANGE_LAYOUT", "horizontal span, keyboard")
+                    setGuides("keyboard",0, 800)
+                }
+                else if (chatToggle || this.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                    Log.d("CHANGE_LAYOUT", "horizontal span, chat or landscape")
+                    setGuides("chat", spanValue, 0)
                 }
                 else {
-                    //if combined screen is landscape
-                    if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                        Log.d("CHANGE_LAYOUT", "horizontal span, landscape")
-                        setGuides(0, 0)
-                    }
-                    else {
-                        Log.d("CHANGE_LAYOUT", "horizontal span, portrait")
-                        setGuides(spanValue, 0)
-                    }
+                    Log.d("CHANGE_LAYOUT", "horizontal span, no keyboard, no chat, portrait")
+                    setGuides("fullscreen", 0, 0)
                 }
             }
             else {
-                //if chat is on
                 if (chatToggle) {
                     Log.d("CHANGE_LAYOUT", "vertical span, chat")
-                    setGuides(0, spanValue)
+                    setGuides("chat",0, spanValue)
                 }
                 else {
-                    Log.d("CHANGE_LAYOUT", "vertical span, chat")
-                    setGuides(0, 0)
+                    Log.d("CHANGE_LAYOUT", "vertical span")
+                    setGuides("fullscreen",0, 0)
                 }
             }
         }
@@ -153,16 +183,22 @@ class MainActivity : AppCompatActivity() {
             if (chatToggle) {
                 if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                     Log.d("CHANGE_LAYOUT", "chat, landscape")
-                    setGuides(0, 600)
+                    setGuides("chat", 0, 800)
                 }
                 else {
-                    Log.d("CHANGE_LAYOUT", "chat, portrait")
-                    setGuides(900, 0)
+                    if (!keyboardToggle) {
+                        Log.d("CHANGE_LAYOUT", "chat, portrait")
+                        setGuides("chat", 800, 0)
+                    }
+                    else {
+                        Log.d("CHANGE_LAYOUT", "chat, portrait, keyboard")
+                        setGuides("keyboard",0, 0)
+                    }
                 }
             }
             else {
                 Log.d("CHANGE_LAYOUT", "none")
-                setGuides(0, 0)
+                setGuides("fullscreen",0, 0)
             }
         }
     }

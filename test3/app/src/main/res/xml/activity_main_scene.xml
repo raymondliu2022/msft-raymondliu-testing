@@ -8,15 +8,31 @@
         motion:constraintSetStart="@+id/fullscreen"
         motion:constraintSetEnd="@+id/chat"
         motion:duration="500" />
-
+    <Transition
+        motion:constraintSetStart="@+id/fullscreen"
+        motion:constraintSetEnd="@+id/keyboard"
+        motion:duration="1" />
     <Transition
         motion:constraintSetStart="@+id/chat"
         motion:constraintSetEnd="@+id/fullscreen"
         motion:duration="500" />
+    <Transition
+        motion:constraintSetStart="@+id/chat"
+        motion:constraintSetEnd="@+id/keyboard"
+        motion:duration="1" />
+    <Transition
+        motion:constraintSetStart="@+id/keyboard"
+        motion:constraintSetEnd="@+id/chat"
+        motion:duration="1" />
+    <Transition
+        motion:constraintSetStart="@+id/keyboard"
+        motion:constraintSetEnd="@+id/fullscreen"
+        motion:duration="1" />
 
     <ConstraintSet android:id="@+id/fullscreen">
     </ConstraintSet>
-
+    <ConstraintSet android:id="@+id/keyboard">
+    </ConstraintSet>
     <ConstraintSet android:id="@+id/chat">
     </ConstraintSet>
 
