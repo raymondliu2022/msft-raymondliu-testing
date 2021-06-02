@@ -1,8 +1,6 @@
 package com.example.test3
 
 import android.content.res.Configuration
-import android.graphics.Rect
-import android.hardware.camera2.params.MeteringRectangle
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
@@ -11,11 +9,8 @@ import android.util.Log
 import android.view.View
 import android.view.WindowInsets
 import androidx.constraintlayout.motion.widget.MotionLayout
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.constraintlayout.widget.ConstraintSet
 import androidx.constraintlayout.widget.ReactiveGuide
 import androidx.core.util.Consumer
-import androidx.core.view.WindowInsetsCompat
 import androidx.window.DisplayFeature
 import androidx.window.FoldingFeature
 import androidx.window.WindowLayoutInfo
@@ -45,6 +40,7 @@ class MainActivity : AppCompatActivity() {
     private var spanToggle: Boolean = false
     private var spanOrientation: Int = FoldingFeature.ORIENTATION_VERTICAL
     private var spanValue: Int = 0
+    private var spanPadding: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d("CHANGE_LAYOUT", "on create")
@@ -54,7 +50,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         rootView = findViewById<MotionLayout>(R.id.root)
-        rootView.transitionToState(R.id.base)
         chatEnableButton = findViewById<FloatingActionButton>(R.id.chatEnableButton)
         endChatView = findViewById<ReactiveGuide>(R.id.end_chat_view)
         bottomChatView = findViewById<ReactiveGuide>(R.id.bottom_chat_view)
@@ -68,6 +63,9 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         Log.d("CHANGE_LAYOUT", "on start")
         super.onStart()
+
+        rootView.setState(R.id.fullscreen_state, -1, -1)
+
         windowManager.registerLayoutChangeCallback(mainThreadExecutor, stateContainer)
 
         var videoUrl = "https://storage.googleapis.com/exoplayer-test-media-0/BigBuckBunny_320x180.mp4"
@@ -102,10 +100,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        Log.d("YEET", rootView.currentState.toString() + " == " + R.id.base.toString())
-    }
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
 
@@ -134,11 +128,27 @@ class MainActivity : AppCompatActivity() {
         super.onSaveInstanceState(outState)
     }
 
-    fun setGuides(mode: String, horizontal : Int, vertical: Int) {
-        var constraintSet = rootView.getConstraintSet(R.id.base)
-        constraintSet.setGuidelineEnd(R.id.horizontal_guide, horizontal)
-        constraintSet.setGuidelineEnd(R.id.vertical_guide, vertical)
-        rootView.updateStateAnimate(R.id.base, constraintSet, 500)
+    fun setFullscreen() {
+        bottomChatView.setPadding(0,0,0,0)
+        endChatView.setPadding(0,0,0,0)
+        rootView.transitionToState(R.id.fullscreen_state, 500)
+    }
+
+    fun setGuides(vertical_position : Int, vertical_padding : Int, horizontal_position: Int, horizontal_padding: Int) {
+
+        bottomChatView.setPadding(0,vertical_padding,0,0)
+        endChatView.setPadding(horizontal_padding,0,0,0)
+
+        var constraintSet = rootView.getConstraintSet(R.id.shrunk_constraints)
+        constraintSet.setGuidelineEnd(R.id.horizontal_guide, vertical_position)
+        constraintSet.setGuidelineEnd(R.id.vertical_guide, horizontal_position)
+
+        if (rootView.currentState == R.id.shrunk_state) {
+            rootView.updateStateAnimate(R.id.shrunk_state, constraintSet, 3000)
+        }
+        else {
+            rootView.transitionToState(R.id.shrunk_state, 500)
+        }
     }
 
     fun changeLayout() {
@@ -148,25 +158,25 @@ class MainActivity : AppCompatActivity() {
             if (spanOrientation == FoldingFeature.ORIENTATION_HORIZONTAL) {
                 if (keyboardToggle) {
                     Log.d("CHANGE_LAYOUT", "horizontal span, keyboard")
-                    setGuides("keyboard",0, 800)
+                    setGuides(0, 0,800, 0)
                 }
                 else if (chatToggle || this.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
                     Log.d("CHANGE_LAYOUT", "horizontal span, chat or landscape")
-                    setGuides("chat", spanValue, 0)
+                    setGuides(spanValue, spanPadding,0,0)
                 }
                 else {
                     Log.d("CHANGE_LAYOUT", "horizontal span, no keyboard, no chat, portrait")
-                    setGuides("fullscreen", 0, 0)
+                    setFullscreen()
                 }
             }
             else {
                 if (chatToggle) {
                     Log.d("CHANGE_LAYOUT", "vertical span, chat")
-                    setGuides("chat",0, spanValue)
+                    setGuides(0, 0, spanValue, spanPadding)
                 }
                 else {
                     Log.d("CHANGE_LAYOUT", "vertical span")
-                    setGuides("fullscreen",0, 0)
+                    setFullscreen()
                 }
             }
         }
@@ -174,22 +184,22 @@ class MainActivity : AppCompatActivity() {
             if (chatToggle) {
                 if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                     Log.d("CHANGE_LAYOUT", "chat, landscape")
-                    setGuides("chat", 0, 800)
+                    setGuides( 0, 0, 800, 0)
                 }
                 else {
                     if (!keyboardToggle) {
                         Log.d("CHANGE_LAYOUT", "chat, portrait")
-                        setGuides("chat", 800, 0)
+                        setGuides( 800, 0, 0, 0)
                     }
                     else {
                         Log.d("CHANGE_LAYOUT", "chat, portrait, keyboard")
-                        setGuides("keyboard",0, 0)
+                        setFullscreen()
                     }
                 }
             }
             else {
                 Log.d("CHANGE_LAYOUT", "none")
-                setGuides("fullscreen",0, 0)
+                setFullscreen()
             }
         }
     }
@@ -215,11 +225,11 @@ class MainActivity : AppCompatActivity() {
                     spanOrientation = displayFeature.orientation
                     if (spanOrientation == FoldingFeature.ORIENTATION_HORIZONTAL) {
                         spanValue = displayFeature.bounds.bottom
-                        bottomChatView.setPadding(0,displayFeature.bounds.height(),0,0)
+                        spanPadding = displayFeature.bounds.height()
                     }
                     else {
                         spanValue = displayFeature.bounds.right
-                        endChatView.setPadding(displayFeature.bounds.width(),0,0,0)
+                        spanPadding = displayFeature.bounds.width()
                     }
                 }
             }
