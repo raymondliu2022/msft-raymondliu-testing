@@ -54,6 +54,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         rootView = findViewById<MotionLayout>(R.id.root)
+        rootView.transitionToState(R.id.base)
         chatEnableButton = findViewById<FloatingActionButton>(R.id.chatEnableButton)
         endChatView = findViewById<ReactiveGuide>(R.id.end_chat_view)
         bottomChatView = findViewById<ReactiveGuide>(R.id.bottom_chat_view)
@@ -101,6 +102,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        Log.d("YEET", rootView.currentState.toString() + " == " + R.id.base.toString())
+    }
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
 
