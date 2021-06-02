@@ -64,7 +64,7 @@ class MainActivity : AppCompatActivity() {
         Log.d("CHANGE_LAYOUT", "on start")
         super.onStart()
 
-        rootView.setState(R.id.fullscreen_state, -1, -1)
+        rootView.setState(R.id.fullscreen_constraints, -1, -1)
 
         windowManager.registerLayoutChangeCallback(mainThreadExecutor, stateContainer)
 
@@ -86,16 +86,9 @@ class MainActivity : AppCompatActivity() {
             } else {
                 tempKeyboardToggle = rootView.rootWindowInsets.systemWindowInsetBottom > 200 //TEST
             }
-            if (tempKeyboardToggle) {
-                if (!keyboardToggle) {
-                    keyboardToggle = true
-                    changeLayout()
-                }
-            } else {
-                if (keyboardToggle) {
-                    keyboardToggle = false
-                    changeLayout()
-                }
+            if (tempKeyboardToggle != keyboardToggle) {
+                keyboardToggle = tempKeyboardToggle
+                changeLayout()
             }
         }
     }
@@ -131,11 +124,10 @@ class MainActivity : AppCompatActivity() {
     fun setFullscreen() {
         bottomChatView.setPadding(0,0,0,0)
         endChatView.setPadding(0,0,0,0)
-        rootView.transitionToState(R.id.fullscreen_state, 500)
+        rootView.transitionToState(R.id.fullscreen_constraints, 500)
     }
 
     fun setGuides(vertical_position : Int, vertical_padding : Int, horizontal_position: Int, horizontal_padding: Int) {
-
         bottomChatView.setPadding(0,vertical_padding,0,0)
         endChatView.setPadding(horizontal_padding,0,0,0)
 
@@ -143,11 +135,11 @@ class MainActivity : AppCompatActivity() {
         constraintSet.setGuidelineEnd(R.id.horizontal_guide, vertical_position)
         constraintSet.setGuidelineEnd(R.id.vertical_guide, horizontal_position)
 
-        if (rootView.currentState == R.id.shrunk_state) {
-            rootView.updateStateAnimate(R.id.shrunk_state, constraintSet, 3000)
+        if (rootView.currentState == R.id.shrunk_constraints) {
+            rootView.updateStateAnimate(R.id.shrunk_constraints, constraintSet, 500)
         }
         else {
-            rootView.transitionToState(R.id.shrunk_state, 500)
+            rootView.transitionToState(R.id.shrunk_constraints, 500)
         }
     }
 

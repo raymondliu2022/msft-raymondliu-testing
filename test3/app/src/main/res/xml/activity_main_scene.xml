@@ -5,11 +5,5 @@
 
     <ConstraintSet android:id="@+id/shrunk_constraints"></ConstraintSet>
     <ConstraintSet android:id="@+id/fullscreen_constraints"></ConstraintSet>
-    <StateSet motion:defaultState="@+id/fullscreen_state">
-        <State android:id="@+id/shrunk_state"
-            motion:constraints="@+id/shrunk_constraints"/>
-        <State android:id="@+id/fullscreen_state"
-            motion:constraints="@+id/fullscreen_constraints"/>
-    </StateSet>
 
 </MotionScene>
