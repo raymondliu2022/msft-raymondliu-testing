@@ -130,24 +130,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun setGuides(mode: String, horizontal : Int, vertical: Int) {
-
-        if (mode == "keyboard") {
-            var constraintSet = rootView.getConstraintSet(R.id.keyboard)
-            constraintSet.setGuidelineEnd(R.id.horizontal_guide, horizontal)
-            constraintSet.setGuidelineEnd(R.id.vertical_guide, vertical)
-            rootView.updateState(R.id.keyboard, constraintSet)
-            rootView.transitionToState(R.id.keyboard)
-        }
-        else if (mode == "chat"){
-            var constraintSet = rootView.getConstraintSet(R.id.chat)
-            constraintSet.setGuidelineEnd(R.id.horizontal_guide, horizontal)
-            constraintSet.setGuidelineEnd(R.id.vertical_guide, vertical)
-            rootView.updateState(R.id.chat, constraintSet)
-            rootView.transitionToState(R.id.chat)
-        }
-        else {
-            rootView.transitionToState(R.id.fullscreen)
-        }
+        var constraintSet = rootView.getConstraintSet(R.id.base)
+        constraintSet.setGuidelineEnd(R.id.horizontal_guide, horizontal)
+        constraintSet.setGuidelineEnd(R.id.vertical_guide, vertical)
+        rootView.updateStateAnimate(R.id.base, constraintSet, 500)
     }
 
     fun changeLayout() {
