@@ -8,6 +8,7 @@ import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.view.WindowInsets
+import android.widget.ImageButton
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.constraintlayout.widget.ReactiveGuide
 import androidx.core.util.Consumer
@@ -17,6 +18,7 @@ import androidx.window.WindowLayoutInfo
 import androidx.window.WindowManager
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.ui.StyledPlayerControlView
 import com.google.android.exoplayer2.ui.StyledPlayerView
 import com.google.android.exoplayer2.util.Util
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -31,9 +33,10 @@ class MainActivity : AppCompatActivity() {
     private val mainThreadExecutor = Executor { r: Runnable -> handler.post(r) }
     private val stateContainer = StateContainer()
 
+    private lateinit var playerControlView : StyledPlayerControlView
     private lateinit var playerView : StyledPlayerView
     private lateinit var player : SimpleExoPlayer
-    private lateinit var chatEnableButton: FloatingActionButton
+    private lateinit var chatEnableButton: ImageButton
 
     private var keyboardToggle: Boolean = false
     private var chatToggle: Boolean = true
@@ -50,13 +53,15 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         rootView = findViewById<MotionLayout>(R.id.root)
-        chatEnableButton = findViewById<FloatingActionButton>(R.id.chatEnableButton)
+        chatEnableButton = findViewById<ImageButton>(R.id.chatEnableButton)
         endChatView = findViewById<ReactiveGuide>(R.id.end_chat_view)
         bottomChatView = findViewById<ReactiveGuide>(R.id.bottom_chat_view)
 
+        playerControlView = findViewById(R.id.player_control_view)
         playerView = findViewById(R.id.player_view);
         player = SimpleExoPlayer.Builder(this).build()
         playerView.player = player
+        playerControlView.player = player
 
     }
 
@@ -150,7 +155,8 @@ class MainActivity : AppCompatActivity() {
             if (spanOrientation == FoldingFeature.ORIENTATION_HORIZONTAL) {
                 if (keyboardToggle) {
                     Log.d("CHANGE_LAYOUT", "horizontal span, keyboard")
-                    setGuides(0, 0,800, 0)
+
+                    setGuides(0, 0,rootView.width/3, 0)
                 }
                 else if (chatToggle || this.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
                     Log.d("CHANGE_LAYOUT", "horizontal span, chat or landscape")
@@ -176,12 +182,12 @@ class MainActivity : AppCompatActivity() {
             if (chatToggle) {
                 if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                     Log.d("CHANGE_LAYOUT", "chat, landscape")
-                    setGuides( 0, 0, 800, 0)
+                    setGuides( 0, 0, rootView.width/3, 0)
                 }
                 else {
                     if (!keyboardToggle) {
                         Log.d("CHANGE_LAYOUT", "chat, portrait")
-                        setGuides( 800, 0, 0, 0)
+                        setGuides( rootView.height/2, 0, 0, 0)
                     }
                     else {
                         Log.d("CHANGE_LAYOUT", "chat, portrait, keyboard")
