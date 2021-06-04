@@ -32,12 +32,6 @@
             android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintTop_toTopOf="parent" />
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            app:layout_constraintBottom_toBottomOf="@+id/chat_title_view"
-            android:background="@color/gray"
-            android:elevation="1dp" />
 
         <ScrollView
             android:id="@+id/chat_scroll_view"
