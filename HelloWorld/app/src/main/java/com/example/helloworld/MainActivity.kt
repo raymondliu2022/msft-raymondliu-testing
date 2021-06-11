@@ -1,8 +1,10 @@
 package com.example.helloworld
 
+import android.icu.text.CaseMap
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
@@ -13,16 +15,16 @@ import androidx.window.WindowManager
 import android.view.Menu
 import android.view.MenuItem
 import androidx.core.util.Consumer
+import androidx.window.DisplayFeature
+import androidx.window.FoldingFeature
 import androidx.window.WindowLayoutInfo
 import com.example.helloworld.databinding.ActivityMainBinding
-import com.example.helloworld.databinding.FragmentFirstBinding
 import java.util.concurrent.Executor
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
-    private lateinit var binding1: FragmentFirstBinding
     private lateinit var wm: WindowManager
 
     private val layoutStateChangeCallback = LayoutStateChangeCallback()
@@ -31,8 +33,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
-        binding1 = FragmentFirstBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        wm = WindowManager(this)
 
         setSupportActionBar(binding.toolbar)
 
@@ -45,7 +47,6 @@ class MainActivity : AppCompatActivity() {
                     .setAction("Action", null).show()
         }
 
-        wm = WindowManager(this, null)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -70,6 +71,18 @@ class MainActivity : AppCompatActivity() {
                 || super.onSupportNavigateUp()
     }
 
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        wm.registerLayoutChangeCallback(
+            runOnUiThreadExecutor(),
+            layoutStateChangeCallback)
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        wm.unregisterLayoutChangeCallback(layoutStateChangeCallback)
+    }
+
     private fun runOnUiThreadExecutor(): Executor {
         val handler = Handler(Looper.getMainLooper())
         return Executor() {
@@ -79,7 +92,15 @@ class MainActivity : AppCompatActivity() {
 
     inner class LayoutStateChangeCallback : Consumer<WindowLayoutInfo> {
         override fun accept(newLayoutInfo: WindowLayoutInfo){
-            binding1.textviewFirst.text = newLayoutInfo.toString()
+            binding.textView.text = "No display features detected"
+            for (displayFeature : DisplayFeature in newLayoutInfo.displayFeatures) {
+                if (displayFeature is FoldingFeature && displayFeature.occlusionMode == FoldingFeature.OCCLUSION_NONE){
+                    binding.textView.text = "App is spanned across a fold"
+                }
+                if (displayFeature is FoldingFeature && displayFeature.occlusionMode == FoldingFeature.OCCLUSION_FULL){
+                    binding.textView.text = "App is spanned across a hinge"
+                }
+            }
         }
     }
 }
