@@ -21,7 +21,6 @@ import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.ui.StyledPlayerControlView
 import com.google.android.exoplayer2.ui.StyledPlayerView
 import com.google.android.exoplayer2.util.Util
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.concurrent.Executor
 
 class MainActivity : AppCompatActivity() {
@@ -42,11 +41,10 @@ class MainActivity : AppCompatActivity() {
     private var chatToggle: Boolean = true
     private var spanToggle: Boolean = false
     private var spanOrientation: Int = FoldingFeature.ORIENTATION_VERTICAL
-    private var spanValue: Int = 0
-    private var spanPadding: Int = 0
+    private var guidePosition: Int = 0
+    private var chatPadding: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.d("CHANGE_LAYOUT", "on create")
         super.onCreate(savedInstanceState)
 
         windowManager = WindowManager(this)
@@ -66,7 +64,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onStart() {
-        Log.d("CHANGE_LAYOUT", "on start")
         super.onStart()
 
         rootView.setState(R.id.fullscreen_constraints, -1, -1)
@@ -149,54 +146,37 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun changeLayout() {
-        //if app is spanned across a fold
-        if (spanToggle) {
-            //if fold is horizontal
-            if (spanOrientation == FoldingFeature.ORIENTATION_HORIZONTAL) {
-                if (keyboardToggle) {
-                    Log.d("CHANGE_LAYOUT", "horizontal span, keyboard")
-
+        if (spanToggle) { //if app is spanned across a fold
+            if (spanOrientation == FoldingFeature.ORIENTATION_HORIZONTAL) { //if fold is horizontal
+                if (keyboardToggle) { //if keyboard is enabled
                     setGuides(0, 0,rootView.width/3, 0)
                 }
-                else if (chatToggle || this.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
-                    Log.d("CHANGE_LAYOUT", "horizontal span, chat or landscape")
-                    setGuides(spanValue, spanPadding,0,0)
+                else if (chatToggle || this.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) { //if chat is enabled or device is taller than wider
+                    setGuides(guidePosition, chatPadding,0,0)
                 }
                 else {
-                    Log.d("CHANGE_LAYOUT", "horizontal span, no keyboard, no chat, portrait")
                     setFullscreen()
                 }
             }
-            else {
-                if (chatToggle) {
-                    Log.d("CHANGE_LAYOUT", "vertical span, chat")
-                    setGuides(0, 0, spanValue, spanPadding)
-                }
-                else {
-                    Log.d("CHANGE_LAYOUT", "vertical span")
-                    setFullscreen()
-                }
+            else if (chatToggle) { //if chat is enabled
+                setGuides(0, 0, guidePosition, chatPadding)
+            } else {
+                setFullscreen()
             }
         }
         else {
-            if (chatToggle) {
-                if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                    Log.d("CHANGE_LAYOUT", "chat, landscape")
+            if (chatToggle) { //if chat is enabled
+                if (this.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) { //if the phone is landscape
                     setGuides( 0, 0, rootView.width/3, 0)
                 }
-                else {
-                    if (!keyboardToggle) {
-                        Log.d("CHANGE_LAYOUT", "chat, portrait")
-                        setGuides( rootView.height/2, 0, 0, 0)
-                    }
-                    else {
-                        Log.d("CHANGE_LAYOUT", "chat, portrait, keyboard")
-                        setFullscreen()
-                    }
+                else if (!keyboardToggle) {
+                    setGuides( rootView.height/2, 0, 0, 0)
+                }
+                else { //if the keyboard is enabled
+                    setFullscreen()
                 }
             }
             else {
-                Log.d("CHANGE_LAYOUT", "none")
                 setFullscreen()
             }
         }
@@ -212,22 +192,19 @@ class MainActivity : AppCompatActivity() {
 
     inner class StateContainer : Consumer<WindowLayoutInfo> {
         override fun accept(newLayoutInfo: WindowLayoutInfo) {
-            // Add views that represent display features
             spanToggle = false
 
-            endChatView.setPadding(0,0,0,0)
-            bottomChatView.setPadding(0,0,0,0)
             for (displayFeature : DisplayFeature in newLayoutInfo.displayFeatures) {
                 if (displayFeature is FoldingFeature){
                     spanToggle = true
                     spanOrientation = displayFeature.orientation
                     if (spanOrientation == FoldingFeature.ORIENTATION_HORIZONTAL) {
-                        spanValue = displayFeature.bounds.bottom
-                        spanPadding = displayFeature.bounds.height()
+                        guidePosition = rootView.height - rootView.paddingBottom - displayFeature.bounds.top
+                        chatPadding = displayFeature.bounds.height()
                     }
                     else {
-                        spanValue = displayFeature.bounds.right
-                        spanPadding = displayFeature.bounds.width()
+                        guidePosition = rootView.width - rootView.paddingEnd - displayFeature.bounds.left
+                        chatPadding = displayFeature.bounds.width()
                     }
                 }
             }
