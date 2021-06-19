@@ -15,6 +15,9 @@ class StartActivity : AppCompatActivity(){
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_start)
 
+
+        setSupportActionBar(findViewById(R.id.toolbar))
+
         val titleRecyclerView = findViewById<RecyclerView>(R.id.title_recycler)
         titleRecyclerView.layoutManager = LinearLayoutManager(this)
         titleRecyclerView.adapter = TitleRecyclerAdapter(assets.list("books/")!!)
@@ -25,7 +28,7 @@ class StartActivity : AppCompatActivity(){
         private var bookList = inBookList
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TitleViewHolder {
-            val pageView = LayoutInflater.from(parent.context).inflate(R.layout.title_item_layout, parent, false)
+            val pageView = LayoutInflater.from(parent.context).inflate(R.layout.start_title_layout, parent, false)
             return TitleViewHolder(pageView)
         }
 
@@ -47,6 +50,7 @@ class StartActivity : AppCompatActivity(){
         override fun onClick(view: View) {
             val intent = Intent(applicationContext, BookActivity::class.java)
             intent.putExtra("BOOK_FILEPATH", "books/${titleText.text}.txt")
+            intent.putExtra("BOOK_TITLE", "${titleText.text}")
             startActivity(intent)
         }
     }

@@ -2,6 +2,7 @@ package com.example.test4
 
 import android.content.Context
 import android.content.res.AssetManager
+import android.graphics.Rect
 import android.text.Html
 import android.util.Log
 import android.view.View
@@ -13,13 +14,17 @@ import kotlin.math.min
 class Book(inFilePath: String, inAssetManager: AssetManager, inActivityContext: Context) {
     private val filePath: String = inFilePath
     private val assetManager: AssetManager = inAssetManager
-    var chapterStarts: ArrayList<Int> = ArrayList()
     private val activityContext: Context = inActivityContext
+    private var chapterStarts: ArrayList<Int> = ArrayList()
+    private var chapterLengths: ArrayList<Int> = ArrayList()
+    var numChapters = 0
+        get() = chapterStarts.size
 
     init {
         val bufferedReader = BufferedReader(InputStreamReader(assetManager.open(filePath)))
 
         var line = 0
+        var lineCount = 0
         var lineString: String? = ""
         var emptyLineCount = 2
 
@@ -29,16 +34,25 @@ class Book(inFilePath: String, inAssetManager: AssetManager, inActivityContext: 
             } else {
                 if (emptyLineCount >= 3) {
                     chapterStarts.add(line)
+                    chapterLengths.add(lineCount)
+                    lineCount = 0
                 }
                 emptyLineCount = 0
             }
             line += 1
+            lineCount += 1
             lineString = bufferedReader.readLine()
         } while (lineString != null)
         bufferedReader.close()
+
+        chapterLengths.add(lineCount)
+        chapterLengths.removeAt(0)
     }
 
-    lateinit var paragraphStrings: ArrayList<String>
+    private lateinit var paragraphStrings: ArrayList<String>
+    var chapterTitle = ""
+        get() = paragraphStrings[0]
+
     var currentChapter = 0
         set(inChapter) {
             field = inChapter
@@ -54,7 +68,7 @@ class Book(inFilePath: String, inAssetManager: AssetManager, inActivityContext: 
 
                 var paragraphBuffer = StringBuffer()
                 var lineBuffer = ""
-                for (line in chapterStarts[field] until chapterStarts[field + 1]) {
+                for (line in 0 until chapterLengths[field]) {
                     lineBuffer = bufferedReader.readLine()
                     if (lineBuffer.isEmpty()) {
                         if (!paragraphBuffer.isEmpty()) {
@@ -67,18 +81,14 @@ class Book(inFilePath: String, inAssetManager: AssetManager, inActivityContext: 
                 }
                 bufferedReader.close()
             }
+
+            buildPages()
         }
 
-    var paragraphWidth = 0
-    var screenHeight = 0
-    var currentParagraph = 0
 
-    lateinit var underflowTextView: TextView
-    lateinit var underflowTextView2: TextView
-    lateinit var overflowTextView: TextView
-    lateinit var overflowTextView2: TextView
+    private var currentParagraph = 0
 
-    lateinit var pageViews: ArrayList<ArrayList<TextView>>
+    private lateinit var pageViews: ArrayList<ArrayList<TextView>>
     fun getPageView(index: Int): ArrayList<TextView> {
         return if (index < pageViews.size && index >= 0) {
             pageViews[index]
@@ -87,6 +97,8 @@ class Book(inFilePath: String, inAssetManager: AssetManager, inActivityContext: 
             ArrayList()
         }
     }
+    var numPages = 0
+        get() = pageViews.size
 
     var currentPage: Int
         get(){
@@ -96,7 +108,6 @@ class Book(inFilePath: String, inAssetManager: AssetManager, inActivityContext: 
                 remainingParagraphs -= pageViews[page].size
                 page += 1
             }
-            Log.d("RL2022","get page $page paragraph $currentParagraph")
             return page
         }
         set(inPage) {
@@ -104,36 +115,52 @@ class Book(inFilePath: String, inAssetManager: AssetManager, inActivityContext: 
             for (page in 0 until min(inPage, pageViews.size)) {
                 currentParagraph += pageViews[page].size
             }
-            Log.d("RL2022","set page $inPage paragraph $currentParagraph")
+        }
+
+    var pageRects = ArrayList<Rect>()
+        set(input) {
+            field = input
+            buildPages()
+        }
+
+    var fontSize = 12
+        set(input) {
+            field = input
+            buildPages()
         }
 
     fun buildPages() {
-        pageViews = ArrayList()
-        pageViews.add(ArrayList())
+        if (pageRects.isEmpty()) { return }
 
-        var availableHeight = screenHeight
+        val pagePadding = activityContext.resources.getDimension(R.dimen.page_padding).toInt()
+
+        pageViews = ArrayList()
+        var textViews = ArrayList<TextView>()
+
+        var pageRectIndex = 0
+        var availableHeight = pageRects[pageRectIndex].height() - (2 * pagePadding)
         for (paragraphString in paragraphStrings) {
             val textView =
-                View.inflate(activityContext, R.layout.paragraph_text_layout, null) as TextView
+                View.inflate(activityContext, R.layout.book_page_text_paragraph, null) as TextView
             textView.text = Html.fromHtml(paragraphString)
+            textView.textSize = fontSize.toFloat()
             textView.measure(
                 View.MeasureSpec.makeMeasureSpec(
-                    paragraphWidth,
+                    pageRects[pageRectIndex].width() - (2 * pagePadding),
                     View.MeasureSpec.AT_MOST
                 ), View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
             )
             if (textView.measuredHeight > availableHeight) {
-                pageViews.add(ArrayList())
-                availableHeight = screenHeight
+                pageViews.add(textViews)
+                textViews = ArrayList()
+                pageRectIndex = (pageRectIndex + 1) % pageRects.size
+                availableHeight = pageRects[pageRectIndex].height() - (2 * pagePadding)
             }
             availableHeight -= textView.measuredHeight
-            pageViews[pageViews.size - 1].add(textView)
+            textViews.add(textView)
         }
 
-        underflowTextView = View.inflate(activityContext, R.layout.underflow_text_layout, null) as TextView
-        underflowTextView2 = View.inflate(activityContext, R.layout.underflow_text_layout, null) as TextView
-        overflowTextView = View.inflate(activityContext, R.layout.overflow_text_layout, null) as TextView
-        overflowTextView2 = View.inflate(activityContext, R.layout.overflow_text_layout, null) as TextView
+        pageViews.add(textViews)
     }
 
     private fun textStringHelper(inString: String): String {

@@ -1,29 +1,29 @@
 package com.example.test4
 
 import android.content.res.Configuration
+import android.graphics.Rect
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.*
-import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.core.util.Consumer
-import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import androidx.window.DisplayFeature
 import androidx.window.FoldingFeature
 import androidx.window.WindowLayoutInfo
 import androidx.window.WindowManager
 import java.util.concurrent.Executor
+import kotlin.math.max
+import kotlin.math.min
 
 class BookActivity : AppCompatActivity(), ViewTreeObserver.OnGlobalLayoutListener {
     private lateinit var book: Book
 
-    private lateinit var viewPagerView: ViewPager2
+    private lateinit var bookPagerView: ViewPager2
     private lateinit var windowManager: WindowManager
-    private var pagePagerCallback = PagePagerCallback()
+    private var pagePagerCallback = BookPagerCallback()
     private val handler = Handler(Looper.getMainLooper())
     private val mainThreadExecutor = Executor { r: Runnable -> handler.post(r) }
     private val layoutStateContainer = LayoutStateContainer()
@@ -39,75 +39,80 @@ class BookActivity : AppCompatActivity(), ViewTreeObserver.OnGlobalLayoutListene
         book.currentChapter = 2
     }
 
-    override fun onStart() {
-        super.onStart()
-        windowManager.registerLayoutChangeCallback(mainThreadExecutor, layoutStateContainer)
-    }
-
-    override fun onStop() {
-        super.onStop()
-        windowManager.unregisterLayoutChangeCallback(layoutStateContainer)
-    }
-
     override fun onConfigurationChanged(newConfig: Configuration) {
-        Log.d("RL2022", "onConfigurationChanged")
         super.onConfigurationChanged(newConfig)
 
         renderLoading()
     }
 
     private fun renderLoading() {
-        Log.d("RL2022", "renderLoading")
         setContentView(R.layout.activity_book)
-        findViewById<View>(R.id.loading_text_view).viewTreeObserver.addOnGlobalLayoutListener(this)
+
+        setSupportActionBar(findViewById(R.id.toolbar))
+        supportActionBar?.title = intent.getStringExtra("BOOK_TITLE")
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+        bookPagerView = findViewById(R.id.view_pager_view)
+        bookPagerView.viewTreeObserver.addOnGlobalLayoutListener(this)
+        bookPagerView.setPageTransformer(PageTransformer())
     }
 
     override fun onGlobalLayout() {
-        Log.d("RL2022", "onGlobalLayout")
-        findViewById<View>(R.id.loading_text_view).viewTreeObserver.removeOnGlobalLayoutListener(this)
+        bookPagerView.viewTreeObserver.removeOnGlobalLayoutListener(this)
 
-        val loadingTextView = findViewById<View>(R.id.loading_text_view)
-        book.paragraphWidth = if (layoutStateContainer.layoutMode != LayoutMode.SPLIT_HORIZONTAL) loadingTextView.width else (((loadingTextView.width - layoutStateContainer.dividerWidth) / 2) - resources.getDimension(R.dimen.page_margins).toInt())
-        book.screenHeight = if (layoutStateContainer.layoutMode != LayoutMode.SPLIT_VERTICAL) loadingTextView.height else (((loadingTextView.height - layoutStateContainer.dividerWidth) / 2) - resources.getDimension(R.dimen.page_margins).toInt())
-        book.buildPages()
+        val bookPagerLocation = IntArray(2)
+        bookPagerView.getLocationInWindow(bookPagerLocation)
+        val bookPagerRect = Rect(bookPagerLocation[0], bookPagerLocation[1], bookPagerLocation[0] + bookPagerView.width, bookPagerLocation[1] + bookPagerView.height)
+        val captionHeight = resources.getDimension(R.dimen.caption_height).toInt()
+
+        val tempPageRects = ArrayList<Rect>()
+        when (layoutStateContainer.layoutMode) {
+            LayoutMode.NORMAL -> {
+                tempPageRects.add(Rect(bookPagerRect.left, bookPagerRect.top, bookPagerRect.right, bookPagerRect.bottom - captionHeight))
+            }
+            LayoutMode.SPLIT_VERTICAL -> {
+                tempPageRects.add(Rect(bookPagerRect.left, bookPagerRect.top, bookPagerRect.right, layoutStateContainer.foldRect.top))
+                tempPageRects.add(Rect(bookPagerRect.left, layoutStateContainer.foldRect.bottom, bookPagerRect.right, bookPagerRect.bottom - captionHeight))
+            }
+            LayoutMode.SPLIT_HORIZONTAL -> {
+                tempPageRects.add(Rect(bookPagerRect.left, bookPagerRect.top, layoutStateContainer.foldRect.left, bookPagerRect.bottom - captionHeight))
+                tempPageRects.add(Rect(layoutStateContainer.foldRect.right, bookPagerRect.top, bookPagerRect.right, bookPagerRect.bottom - captionHeight))
+            }
+        }
+
+        book.pageRects = tempPageRects
 
         renderBook()
     }
 
     private fun renderBook() {
-        Log.d("RL2022", "renderBook")
-        val viewPagerStub = findViewById<ViewStub>(R.id.view_pager_stub)
-        if (viewPagerStub != null) {
-            viewPagerView = viewPagerStub.inflate() as ViewPager2
-        } else {
-            viewPagerView = findViewById(R.id.view_pager_view)
-            viewPagerView.unregisterOnPageChangeCallback(pagePagerCallback)
+        if (bookPagerView.adapter != null) {
+            bookPagerView.unregisterOnPageChangeCallback(pagePagerCallback)
         }
 
-        viewPagerView.adapter = PagePagerAdapter(book, layoutStateContainer)
+        bookPagerView.adapter = BookPagerAdapter(book, layoutStateContainer)
         val position = if (layoutStateContainer.layoutMode == LayoutMode.NORMAL) book.currentPage + 1 else (book.currentPage/2) + 1
-        viewPagerView.setCurrentItem(position, false)
-        viewPagerView.registerOnPageChangeCallback(pagePagerCallback)
+        bookPagerView.setCurrentItem(position, false)
+        bookPagerView.registerOnPageChangeCallback(pagePagerCallback)
+
     }
 
-    private inner class PagePagerCallback() : ViewPager2.OnPageChangeCallback() {
+    inner class BookPagerCallback() : ViewPager2.OnPageChangeCallback() {
         override fun onPageSelected(position: Int) {
             Log.d("RL2022", "onPageSelected $position")
             when (position) {
                 0 -> {
                     if (book.currentChapter > 0) {
                         book.currentChapter = book.currentChapter - 1
-                        book.buildPages()
-                        book.currentPage = book.pageViews.size - 1
+                        book.currentPage = book.numPages - 1
                         handler.postDelayed({
                             renderBook()
                         }, 500)
                     }
                 }
-                viewPagerView.adapter!!.itemCount - 1 -> {
-                    if (book.currentChapter < book.chapterStarts.size - 1) {
+                bookPagerView.adapter!!.itemCount - 1 -> {
+                    if (book.currentChapter < book.numChapters - 1) {
                         book.currentChapter = book.currentChapter + 1
-                        book.buildPages()
                         book.currentPage = 0
                         handler.postDelayed({
                             renderBook()
@@ -125,109 +130,78 @@ class BookActivity : AppCompatActivity(), ViewTreeObserver.OnGlobalLayoutListene
         }
     }
 
-    private inner class PagePagerAdapter(inBook: Book, inLayoutStateContainer: LayoutStateContainer) : RecyclerView.Adapter<PageViewHolder>() {
-        private val book = inBook
-        private val layoutStateContainer = inLayoutStateContainer
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PageViewHolder {
-            return when(layoutStateContainer.layoutMode) {
-                LayoutMode.NORMAL -> {
-                    PageViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.page_layout, parent, false))
-                }
-                LayoutMode.SPLIT_HORIZONTAL -> {
-                    val view = LayoutInflater.from(parent.context).inflate(R.layout.split_horizontal_page_layout, parent, false)
-                    view.findViewById<View>(R.id.page_divider).layoutParams = LinearLayout.LayoutParams(layoutStateContainer.dividerWidth,LinearLayout.LayoutParams.WRAP_CONTENT)
-                    SplitPageViewHolder(view)
-                }
-                LayoutMode.SPLIT_VERTICAL -> {
-                    val view = LayoutInflater.from(parent.context).inflate(R.layout.split_vertical_page_layout, parent, false)
-                    view.findViewById<View>(R.id.page_divider).layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,layoutStateContainer.dividerWidth)
-                    SplitPageViewHolder(view)
+    inner class PageTransformer : ViewPager2.PageTransformer {
+        override fun transformPage(page: View, position: Float) {
+            page.apply {
+                when {
+                    position < -1 -> {
+                        translationX = 0f
+                        translationZ = 0f
+                        alpha = 0f
+                    }
+                    position > 1 -> {
+                        translationX = 0f
+                        translationZ = -1f
+                        alpha = 0f
+                    }
+                    position > 0 -> {
+                        translationX = width * -position
+                        translationZ = -1f
+                        alpha = 1f
+                    }
+                    else -> {
+                        translationX = 0f
+                        translationZ = 0f
+                        alpha = 1f
+                    }
                 }
             }
-        }
-
-        override fun onBindViewHolder(holder: PageViewHolder, position: Int) {
-            if (layoutStateContainer.layoutMode == LayoutMode.SPLIT_HORIZONTAL) {
-                (holder as SplitPageViewHolder).caption(book.paragraphStrings[0])
-                (holder as SplitPageViewHolder).caption2(book.paragraphStrings[0])
-            }
-            else {
-                holder.caption(book.paragraphStrings[0])
-            }
-
-            if (layoutStateContainer.layoutMode == LayoutMode.NORMAL) {
-                var viewList = ArrayList<TextView>()
-                if (position == 0) {
-                    viewList.add(book.underflowTextView)
-                }
-                else if (position == itemCount - 1){
-                    viewList.add(book.overflowTextView)
-                } else {
-                    viewList = book.getPageView(position - 1)
-                }
-                holder.repopulate(viewList)
-            }
-            else {
-                var viewList = ArrayList<TextView>()
-                var viewList2 = ArrayList<TextView>()
-                if (position == 0) {
-                    viewList.add(book.underflowTextView)
-                    viewList2.add(book.underflowTextView2)
-                }
-                else if (position == itemCount - 1){
-                    viewList.add(book.overflowTextView)
-                    viewList2.add(book.overflowTextView2)
-
-                } else {
-                    viewList = book.getPageView(2 * (position - 1))
-                    viewList2 = book.getPageView((2 * (position - 1)) + 1)
-                }
-                (holder as SplitPageViewHolder).repopulate(viewList)
-                (holder as SplitPageViewHolder).repopulate2(viewList2)
-            }
-        }
-
-        override fun getItemCount(): Int {
-            return if (layoutStateContainer.layoutMode == LayoutMode.NORMAL) {
-                book.pageViews.size + 2
-            } else {
-                (book.pageViews.size / 2) + (book.pageViews.size % 2) + 2
-            }
-
         }
     }
 
-    private open inner class PageViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        private val linearLayout = view.findViewById<LinearLayout>(R.id.linear_layout)
-        private val captionView = view.findViewById<TextView>(R.id.caption_view)
-
-        fun repopulate(paragraphViews: ArrayList<TextView>) {
-            linearLayout.removeAllViews()
-            for (paragraphView in paragraphViews) {
-                linearLayout.addView(paragraphView)
-            }
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.book_menu, menu)
+        val subMenu = menu?.findItem(R.id.action_chapter_group)?.subMenu
+        for (chapter in 2 until book.numChapters) {
+            subMenu?.add("Chapter ${chapter - 1}")
         }
-
-        fun caption(chapter: String) {
-            captionView.text = chapter
-        }
+        return true
     }
 
-    private inner class SplitPageViewHolder(view: View) : PageViewHolder(view) {
-        private val linearLayout2 = view.findViewById<LinearLayout>(R.id.linear_layout2)
-        private val captionView2 = view.findViewById<TextView>(R.id.caption_view2)
+    override fun onSupportNavigateUp(): Boolean {
+        onBackPressed()
+        return super.onSupportNavigateUp()
+    }
 
-        fun repopulate2(paragraphViews: ArrayList<TextView>) {
-            linearLayout2.removeAllViews()
-            for (paragraphView in paragraphViews) {
-                linearLayout2.addView(paragraphView)
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.action_font_up -> {
+                book.fontSize = min(24, book.fontSize + 2)
+                renderBook()
+            }
+            R.id.action_font_down -> {
+                book.fontSize = max(8, book.fontSize - 2)
+                renderBook()
+            }
+            else -> {
+                if (item.title != null && "Chapter (\\d+)".toRegex().matches(item.title)) {
+                    book.currentChapter = item.title.substring(8).toInt() + 1
+                    renderBook()
+                }
             }
         }
 
-        fun caption2(chapter: String) {
-            captionView2.text = chapter
-        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        windowManager.registerLayoutChangeCallback(mainThreadExecutor, layoutStateContainer)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        windowManager.unregisterLayoutChangeCallback(layoutStateContainer)
     }
 
     enum class LayoutMode {
@@ -236,19 +210,18 @@ class BookActivity : AppCompatActivity(), ViewTreeObserver.OnGlobalLayoutListene
 
     inner class LayoutStateContainer : Consumer<WindowLayoutInfo> {
         var layoutMode = LayoutMode.NORMAL
-        var dividerWidth = 0
+        var foldRect = Rect()
 
         override fun accept(newLayoutInfo: WindowLayoutInfo) {
-            Log.d("RL2022", "newLayoutInfo")
             layoutMode = LayoutMode.NORMAL
+            foldRect = Rect()
             for (displayFeature : DisplayFeature in newLayoutInfo.displayFeatures) {
                 if (displayFeature is FoldingFeature) {
+                    foldRect = displayFeature.bounds
                     if (displayFeature.orientation == FoldingFeature.ORIENTATION_HORIZONTAL) {
                         layoutMode = LayoutMode.SPLIT_VERTICAL
-                        dividerWidth = displayFeature.bounds.height()
                     } else {
                         layoutMode = LayoutMode.SPLIT_HORIZONTAL
-                        dividerWidth = displayFeature.bounds.width()
                     }
                 }
             }
