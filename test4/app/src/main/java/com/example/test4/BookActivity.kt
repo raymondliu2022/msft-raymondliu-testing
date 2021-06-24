@@ -35,7 +35,7 @@ class BookActivity : AppCompatActivity(), ViewTreeObserver.OnGlobalLayoutListene
 
         windowManager = WindowManager(this)
 
-        book = Book(intent.getStringExtra("BOOK_FILEPATH")!!, assets, this)
+        book = Book(intent.getStringExtra("BOOK_FILEPATH")!!, this)
         book.currentChapter = 2
     }
 
@@ -54,7 +54,6 @@ class BookActivity : AppCompatActivity(), ViewTreeObserver.OnGlobalLayoutListene
 
         bookPagerView = findViewById(R.id.view_pager_view)
         bookPagerView.viewTreeObserver.addOnGlobalLayoutListener(this)
-        bookPagerView.setPageTransformer(PageTransformer())
     }
 
     override fun onGlobalLayout() {
@@ -91,9 +90,11 @@ class BookActivity : AppCompatActivity(), ViewTreeObserver.OnGlobalLayoutListene
         }
 
         bookPagerView.adapter = BookPagerAdapter(book, layoutStateContainer)
+        bookPagerView.setPageTransformer(PageTransformer())
         val position = if (layoutStateContainer.layoutMode == LayoutMode.NORMAL) book.currentPage + 1 else (book.currentPage/2) + 1
         bookPagerView.setCurrentItem(position, false)
         bookPagerView.registerOnPageChangeCallback(pagePagerCallback)
+        bookPagerView.isUserInputEnabled = true
 
     }
 
@@ -103,20 +104,22 @@ class BookActivity : AppCompatActivity(), ViewTreeObserver.OnGlobalLayoutListene
             when (position) {
                 0 -> {
                     if (book.currentChapter > 0) {
-                        book.currentChapter = book.currentChapter - 1
-                        book.currentPage = book.numPages - 1
+                        bookPagerView.isUserInputEnabled = false
                         handler.postDelayed({
+                            book.currentChapter = book.currentChapter - 1
+                            book.currentPage = book.numPages - 1
                             renderBook()
-                        }, 500)
+                        }, 250)
                     }
                 }
                 bookPagerView.adapter!!.itemCount - 1 -> {
                     if (book.currentChapter < book.numChapters - 1) {
-                        book.currentChapter = book.currentChapter + 1
-                        book.currentPage = 0
+                        bookPagerView.isUserInputEnabled = false
                         handler.postDelayed({
+                            book.currentChapter = book.currentChapter + 1
+                            book.currentPage = 0
                             renderBook()
-                        }, 500)
+                        }, 250)
                     }
                 }
                 else -> {
@@ -186,6 +189,7 @@ class BookActivity : AppCompatActivity(), ViewTreeObserver.OnGlobalLayoutListene
             else -> {
                 if (item.title != null && "Chapter (\\d+)".toRegex().matches(item.title)) {
                     book.currentChapter = item.title.substring(8).toInt() + 1
+                    book.currentPage = 0
                     renderBook()
                 }
             }

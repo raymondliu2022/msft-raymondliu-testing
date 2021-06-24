@@ -1,6 +1,6 @@
 package com.example.test4
 
-import android.content.Context
+import android.text.Html
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,7 +19,7 @@ class BookPagerAdapter(inBook: Book, inLayoutStateContainer: BookActivity.Layout
             BookActivity.LayoutMode.NORMAL -> {
                 val view = LayoutInflater.from(parent.context).inflate(R.layout.book_page_layout_normal, parent, false)
                 view.findViewById<TextView>(R.id.caption_view).text = book.chapterTitle
-                PageViewHolder(view)
+                PageViewHolder(view, book.fontSize)
             }
             BookActivity.LayoutMode.SPLIT_HORIZONTAL -> {
                 val view = LayoutInflater.from(parent.context).inflate(R.layout.book_page_layout_split_horizontal, parent, false)
@@ -30,7 +30,7 @@ class BookPagerAdapter(inBook: Book, inLayoutStateContainer: BookActivity.Layout
 
                 view.findViewById<TextView>(R.id.caption_view).text = book.chapterTitle
                 view.findViewById<TextView>(R.id.caption_view2).text = book.chapterTitle
-                SplitPageViewHolder(view)
+                SplitPageViewHolder(view, book.fontSize)
             }
             BookActivity.LayoutMode.SPLIT_VERTICAL -> {
                 val view = LayoutInflater.from(parent.context).inflate(R.layout.book_page_layout_split_vertical, parent, false)
@@ -40,46 +40,46 @@ class BookPagerAdapter(inBook: Book, inLayoutStateContainer: BookActivity.Layout
                     LinearLayout.LayoutParams.MATCH_PARENT, book.pageRects[1].height())
 
                 view.findViewById<TextView>(R.id.caption_view).text = book.chapterTitle
-                SplitPageViewHolder(view)
+                SplitPageViewHolder(view, book.fontSize)
             }
         }
     }
 
     override fun onBindViewHolder(holder: PageViewHolder, position: Int) {
         if (layoutStateContainer.layoutMode == BookActivity.LayoutMode.NORMAL) {
-            var viewList = ArrayList<TextView>()
+            var stringList = ArrayList<String>()
             when (position) {
                 0 -> {
-                    viewList.add(LayoutInflater.from(holder.rootView.context).inflate(R.layout.book_page_text_underflow, null) as TextView)
+//                    stringList.add(LayoutInflater.from(holder.rootView.context).inflate(R.layout.book_page_text_underflow, null) as TextView)
                 }
                 itemCount - 1 -> {
-                    viewList.add(LayoutInflater.from(holder.rootView.context).inflate(R.layout.book_page_text_overflow, null) as TextView)
+//                    stringList.add(LayoutInflater.from(holder.rootView.context).inflate(R.layout.book_page_text_overflow, null) as TextView)
                 }
                 else -> {
-                    viewList = book.getPageView(position - 1)
+                    stringList = book.getPageStrings(position - 1)
                 }
             }
-            holder.repopulate(viewList)
+            holder.repopulate(stringList)
         }
         else {
-            var viewList = ArrayList<TextView>()
-            var viewList2 = ArrayList<TextView>()
+            var stringList = ArrayList<String>()
+            var stringList2 = ArrayList<String>()
             when (position) {
                 0 -> {
-                    viewList.add(LayoutInflater.from(holder.rootView.context).inflate(R.layout.book_page_text_underflow, null) as TextView)
-                    viewList2.add(LayoutInflater.from(holder.rootView.context).inflate(R.layout.book_page_text_underflow, null) as TextView)
+//                    stringList.add(LayoutInflater.from(holder.rootView.context).inflate(R.layout.book_page_text_underflow, null) as TextView)
+//                    stringList2.add(LayoutInflater.from(holder.rootView.context).inflate(R.layout.book_page_text_underflow, null) as TextView)
                 }
                 itemCount - 1 -> {
-                    viewList.add(LayoutInflater.from(holder.rootView.context).inflate(R.layout.book_page_text_overflow, null) as TextView)
-                    viewList2.add(LayoutInflater.from(holder.rootView.context).inflate(R.layout.book_page_text_overflow, null) as TextView)
+//                    stringList.add(LayoutInflater.from(holder.rootView.context).inflate(R.layout.book_page_text_overflow, null) as TextView)
+//                    stringList2.add(LayoutInflater.from(holder.rootView.context).inflate(R.layout.book_page_text_overflow, null) as TextView)
                 }
                 else -> {
-                    viewList = book.getPageView(2 * (position - 1))
-                    viewList2 = book.getPageView((2 * (position - 1)) + 1)
+                    stringList = book.getPageStrings(2 * (position - 1))
+                    stringList2 = book.getPageStrings((2 * (position - 1)) + 1)
                 }
             }
-            (holder as SplitPageViewHolder).repopulate(viewList)
-            (holder as SplitPageViewHolder).repopulate2(viewList2)
+            (holder as SplitPageViewHolder).repopulate(stringList)
+            (holder as SplitPageViewHolder).repopulate2(stringList2)
         }
     }
 
@@ -93,25 +93,30 @@ class BookPagerAdapter(inBook: Book, inLayoutStateContainer: BookActivity.Layout
     }
 }
 
-open class PageViewHolder(inView: View) : RecyclerView.ViewHolder(inView) {
-    val rootView = inView
-    private val linearLayout = inView.findViewById<LinearLayout>(R.id.linear_layout)
+open class PageViewHolder(val rootView: View, val fontSize: Int) : RecyclerView.ViewHolder(rootView) {
+    private val linearLayout = rootView.findViewById<LinearLayout>(R.id.linear_layout)
 
-    fun repopulate(paragraphViews: ArrayList<TextView>) {
+    fun repopulate(pageStrings: ArrayList<String>) {
         linearLayout.removeAllViews()
-        for (paragraphView in paragraphViews) {
-            linearLayout.addView(paragraphView)
+        for (string in pageStrings) {
+            val textView = View.inflate(rootView.context, R.layout.book_page_text_paragraph, null) as TextView
+            textView.text = Html.fromHtml(string)
+            textView.textSize = fontSize.toFloat()
+            linearLayout.addView(textView)
         }
     }
 }
 
-class SplitPageViewHolder(view: View) : PageViewHolder(view) {
+class SplitPageViewHolder(view: View, int: Int) : PageViewHolder(view, int) {
     private val linearLayout2 = view.findViewById<LinearLayout>(R.id.linear_layout2)
 
-    fun repopulate2(paragraphViews: ArrayList<TextView>) {
+    fun repopulate2(pageStrings: ArrayList<String>) {
         linearLayout2.removeAllViews()
-        for (paragraphView in paragraphViews) {
-            linearLayout2.addView(paragraphView)
+        for (string in pageStrings) {
+            val textView = View.inflate(rootView.context, R.layout.book_page_text_paragraph, null) as TextView
+            textView.text = Html.fromHtml(string)
+            textView.textSize = fontSize.toFloat()
+            linearLayout2.addView(textView)
         }
     }
 }

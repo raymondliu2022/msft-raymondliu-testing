@@ -4,17 +4,15 @@ import android.content.Context
 import android.content.res.AssetManager
 import android.graphics.Rect
 import android.text.Html
-import android.util.Log
 import android.view.View
+import android.widget.LinearLayout
 import android.widget.TextView
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import kotlin.math.min
 
-class Book(inFilePath: String, inAssetManager: AssetManager, inActivityContext: Context) {
-    private val filePath: String = inFilePath
-    private val assetManager: AssetManager = inAssetManager
-    private val activityContext: Context = inActivityContext
+class Book(private val filePath: String, private val activityContext: Context) {
+    private val assetManager: AssetManager = activityContext.assets
     private var chapterStarts: ArrayList<Int> = ArrayList()
     private var chapterLengths: ArrayList<Int> = ArrayList()
     var numChapters = 0
@@ -88,32 +86,32 @@ class Book(inFilePath: String, inAssetManager: AssetManager, inActivityContext: 
 
     private var currentParagraph = 0
 
-    private lateinit var pageViews: ArrayList<ArrayList<TextView>>
-    fun getPageView(index: Int): ArrayList<TextView> {
-        return if (index < pageViews.size && index >= 0) {
-            pageViews[index]
+    private lateinit var pageStrings: ArrayList<ArrayList<String>>
+    fun getPageStrings(index: Int): ArrayList<String> {
+        return if (index < pageStrings.size && index >= 0) {
+            pageStrings[index]
         }
         else {
             ArrayList()
         }
     }
     var numPages = 0
-        get() = pageViews.size
+        get() = pageStrings.size
 
     var currentPage: Int
         get(){
             var page = 0
             var remainingParagraphs = currentParagraph
-            while (page < pageViews.size && pageViews[page].size <= remainingParagraphs ) {
-                remainingParagraphs -= pageViews[page].size
+            while (page < pageStrings.size && pageStrings[page].size <= remainingParagraphs ) {
+                remainingParagraphs -= pageStrings[page].size
                 page += 1
             }
             return page
         }
         set(inPage) {
             currentParagraph = 0
-            for (page in 0 until min(inPage, pageViews.size)) {
-                currentParagraph += pageViews[page].size
+            for (page in 0 until min(inPage, pageStrings.size)) {
+                currentParagraph += pageStrings[page].size
             }
         }
 
@@ -123,44 +121,68 @@ class Book(inFilePath: String, inAssetManager: AssetManager, inActivityContext: 
             buildPages()
         }
 
-    var fontSize = 12
+    var fontSize = 16
         set(input) {
             field = input
             buildPages()
         }
 
+    val pagePadding = activityContext.resources.getDimension(R.dimen.page_padding).toInt()
+
     fun buildPages() {
         if (pageRects.isEmpty()) { return }
 
-        val pagePadding = activityContext.resources.getDimension(R.dimen.page_padding).toInt()
-
-        pageViews = ArrayList()
-        var textViews = ArrayList<TextView>()
+        pageStrings = ArrayList()
+        var textStrings = ArrayList<String>()
 
         var pageRectIndex = 0
         var availableHeight = pageRects[pageRectIndex].height() - (2 * pagePadding)
-        for (paragraphString in paragraphStrings) {
-            val textView =
-                View.inflate(activityContext, R.layout.book_page_text_paragraph, null) as TextView
+        var widthSpec = View.MeasureSpec.makeMeasureSpec(pageRects[pageRectIndex].width() - (2 * pagePadding), View.MeasureSpec.AT_MOST)
+        val heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        val paragraphStringsCopy = paragraphStrings.clone() as ArrayList<String>
+        val paragraphIt = paragraphStringsCopy.listIterator()
+
+        val textView = View.inflate(activityContext, R.layout.book_page_text_paragraph, null) as TextView
+        textView.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+        textView.textSize = fontSize.toFloat()
+        while (paragraphIt.hasNext()) {
+            val paragraphString = paragraphIt.next()
+
             textView.text = Html.fromHtml(paragraphString)
-            textView.textSize = fontSize.toFloat()
-            textView.measure(
-                View.MeasureSpec.makeMeasureSpec(
-                    pageRects[pageRectIndex].width() - (2 * pagePadding),
-                    View.MeasureSpec.AT_MOST
-                ), View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-            )
+            textView.measure(widthSpec,heightSpec)
             if (textView.measuredHeight > availableHeight) {
-                pageViews.add(textViews)
-                textViews = ArrayList()
+                var splitIndex = paragraphString.lastIndexOf(". ")
+                while (splitIndex != -1) {
+                    textView.text = Html.fromHtml(paragraphString.substring(0,splitIndex + 2))
+                    textView.measure(widthSpec,heightSpec)
+                    if (textView.measuredHeight < availableHeight) {
+                        textStrings.add(paragraphString.substring(0,splitIndex + 2))
+                        break;
+                    }
+
+                    splitIndex = paragraphString.lastIndexOf(". ", splitIndex - 1)
+                }
+
+                if (splitIndex == -1) {
+                    paragraphIt.add(paragraphString)
+                }
+                else {
+                    paragraphIt.add(paragraphString.substring(splitIndex + 2))
+                }
+                paragraphIt.previous()
+
+                pageStrings.add(textStrings)
+                textStrings = ArrayList()
                 pageRectIndex = (pageRectIndex + 1) % pageRects.size
+                widthSpec = View.MeasureSpec.makeMeasureSpec(pageRects[pageRectIndex].width() - (2 * pagePadding), View.MeasureSpec.AT_MOST)
                 availableHeight = pageRects[pageRectIndex].height() - (2 * pagePadding)
+            } else {
+                availableHeight -= textView.measuredHeight
+                textStrings.add(paragraphString)
             }
-            availableHeight -= textView.measuredHeight
-            textViews.add(textView)
         }
 
-        pageViews.add(textViews)
+        pageStrings.add(textStrings)
     }
 
     private fun textStringHelper(inString: String): String {
